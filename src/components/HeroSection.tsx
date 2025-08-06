@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import AuthModal from "./AuthModal";
+import { useAuth } from "@/hooks/useAuth";
 
 const HeroSection = () => {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const { user } = useAuth();
+
   return (
     <section className="min-h-[80vh] bg-gradient-hero flex items-center">
       <div className="container mx-auto px-4 py-20">
@@ -21,8 +27,9 @@ const HeroSection = () => {
             <Button 
               size="lg" 
               className="bg-gradient-primary shadow-medium text-lg px-8 py-6 h-auto"
+              onClick={() => setAuthModalOpen(true)}
             >
-              Start Your Journey
+              {user ? "Continue Journey" : "Start Your Journey"}
             </Button>
             <Button 
               variant="outline" 
@@ -34,6 +41,11 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
+      
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+      />
     </section>
   );
 };
