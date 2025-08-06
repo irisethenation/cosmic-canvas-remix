@@ -1,13 +1,47 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Users, Award, BookOpen } from "lucide-react";
 
+interface Course {
+  id: string;
+  title: string;
+  tier_required: number;
+  description_md: string;
+}
+
 const ProgramDetailsSection = () => {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('id, title, tier_required, description_md')
+          .eq('is_published', true)
+          .order('tier_required', { ascending: true })
+          .order('title', { ascending: true });
+
+        if (error) throw error;
+        setCourses(data || []);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   const programHighlights = [
     {
       icon: Clock,
-      title: "16-Week Duration",
-      description: "Comprehensive learning journey with structured progression"
+      title: "Self-Paced Learning",
+      description: "Progress through modules at your own speed with lifetime access"
     },
     {
       icon: Users,
@@ -26,16 +60,27 @@ const ProgramDetailsSection = () => {
     }
   ];
 
-  const topics = [
-    "Understanding Agnotology",
-    "Media Manipulation Techniques",
-    "Information Warfare",
-    "Cognitive Biases & Heuristics",
-    "Source Verification Methods",
-    "Digital Forensics Basics",
-    "Epistemic Communities",
-    "Knowledge Production Systems"
-  ];
+  const getTierColor = (tier: number) => {
+    switch (tier) {
+      case 0: return "bg-green-100 text-green-800 border-green-200";
+      case 1: return "bg-blue-100 text-blue-800 border-blue-200";
+      case 2: return "bg-purple-100 text-purple-800 border-purple-200";
+      case 3: return "bg-orange-100 text-orange-800 border-orange-200";
+      case 4: return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getTierLabel = (tier: number) => {
+    switch (tier) {
+      case 0: return "Free";
+      case 1: return "Foundation";
+      case 2: return "Intermediate";
+      case 3: return "Advanced";
+      case 4: return "Expert";
+      default: return `Tier ${tier}`;
+    }
+  };
 
   return (
     <section className="py-20 bg-hero-bg">
@@ -75,18 +120,30 @@ const ProgramDetailsSection = () => {
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold text-text-primary mb-8">Core Topics Covered</h3>
-              <div className="grid gap-3">
-                {topics.map((topic, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-card border border-border hover:shadow-soft transition-all duration-200">
-                    <div className="w-2 h-2 bg-gradient-primary rounded-full"></div>
-                    <span className="text-text-primary font-medium">{topic}</span>
-                    <Badge variant="secondary" className="ml-auto bg-accent text-accent-foreground">
-                      Week {Math.floor(index / 2) + 1}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+              <h3 className="text-2xl font-bold text-text-primary mb-8">Course Modules</h3>
+              {loading ? (
+                <div className="text-center text-text-secondary">Loading course modules...</div>
+              ) : (
+                <div className="grid gap-3">
+                  {courses.map((course, index) => (
+                    <div key={course.id} className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:shadow-soft transition-all duration-200">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-2 h-2 bg-gradient-primary rounded-full"></div>
+                        <div>
+                          <span className="text-text-primary font-medium block">{course.title}</span>
+                          <span className="text-text-secondary text-sm">{course.description_md.replace(/\*\*/g, '').substring(0, 60)}...</span>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant="outline" 
+                        className={`${getTierColor(course.tier_required)} whitespace-nowrap`}
+                      >
+                        {getTierLabel(course.tier_required)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
