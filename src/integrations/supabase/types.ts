@@ -14,6 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
+      courses: {
+        Row: {
+          created_at: string
+          description_md: string | null
+          id: string
+          is_published: boolean
+          prerequisite: string | null
+          slug: string
+          tier_required: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_md?: string | null
+          id?: string
+          is_published?: boolean
+          prerequisite?: string | null
+          slug: string
+          tier_required?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_md?: string | null
+          id?: string
+          is_published?: boolean
+          prerequisite?: string | null
+          slug?: string
+          tier_required?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_prerequisite_fkey"
+            columns: ["prerequisite"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          content_md: string | null
+          created_at: string
+          id: string
+          is_free: boolean
+          module_id: string
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_md?: string | null
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          module_id: string
+          position: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_md?: string | null
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          module_id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          position: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       two_factor_verifications: {
         Row: {
           code: string
