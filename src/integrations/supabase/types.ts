@@ -14,13 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      two_factor_verifications: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          used: boolean | null
+          user_id: string
+          verification_type: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          used?: boolean | null
+          user_id: string
+          verification_type: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          used?: boolean | null
+          user_id?: string
+          verification_type?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string
+          display_name: string | null
+          email_2fa_enabled: boolean | null
+          id: string
+          totp_enabled: boolean | null
+          totp_secret: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string
+          display_name?: string | null
+          email_2fa_enabled?: boolean | null
+          id?: string
+          totp_enabled?: boolean | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string
+          display_name?: string | null
+          email_2fa_enabled?: boolean | null
+          id?: string
+          totp_enabled?: boolean | null
+          totp_secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_verifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
