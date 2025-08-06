@@ -5,10 +5,11 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">iR</span>
-              </div>
-              <h3 className="text-xl font-bold">iRise Academy</h3>
+              <img 
+                src="/lovable-uploads/5b04634a-8b34-4b3f-b5d4-9ca573b411f1.png" 
+                alt="iRise Academy Logo" 
+                className="w-16 h-12 object-contain"
+              />
             </div>
             <p className="text-gray-300 max-w-md leading-relaxed">
               Empowering individuals with the tools and knowledge to maintain epistemic sovereignty 

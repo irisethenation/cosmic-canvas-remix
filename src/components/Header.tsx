@@ -6,9 +6,11 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center shadow-soft">
-              <span className="text-primary-foreground font-bold text-lg">iR</span>
-            </div>
+            <img 
+              src="/lovable-uploads/7839be91-7988-4489-9261-258c18f256b1.png" 
+              alt="iRise Academy Seal" 
+              className="w-12 h-12"
+            />
             <h1 className="text-xl font-bold text-text-primary">iRise Academy</h1>
           </div>
           
