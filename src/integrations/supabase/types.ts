@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       courses: {
         Row: {
+          cover_url: string | null
           created_at: string
           description_md: string | null
           id: string
@@ -27,6 +28,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cover_url?: string | null
           created_at?: string
           description_md?: string | null
           id?: string
@@ -38,6 +40,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cover_url?: string | null
           created_at?: string
           description_md?: string | null
           id?: string
@@ -54,6 +57,54 @@ export type Database = {
             columns: ["prerequisite"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
         ]
@@ -175,6 +226,7 @@ export type Database = {
           totp_secret: string | null
           updated_at: string
           user_id: string
+          user_tier: number
         }
         Insert: {
           backup_codes?: string[] | null
@@ -186,6 +238,7 @@ export type Database = {
           totp_secret?: string | null
           updated_at?: string
           user_id: string
+          user_tier?: number
         }
         Update: {
           backup_codes?: string[] | null
@@ -197,6 +250,7 @@ export type Database = {
           totp_secret?: string | null
           updated_at?: string
           user_id?: string
+          user_tier?: number
         }
         Relationships: []
       }
