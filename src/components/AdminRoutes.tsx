@@ -14,11 +14,11 @@ import AiKnowledgeBase from "@/pages/admin/AiKnowledgeBase";
 const AdminRoutes = () => {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-slate-900">
         <AdminSidebar />
         <div className="flex-1 flex flex-col">
           <AdminHeader />
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-6 bg-slate-800">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/courses" element={<CourseCrud />} />

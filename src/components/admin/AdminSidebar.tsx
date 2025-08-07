@@ -43,11 +43,11 @@ export function AdminSidebar() {
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-accent text-accent-foreground font-medium" : "hover:bg-accent/50";
+    isActive ? "bg-slate-700 text-white font-medium border-l-2 border-blue-400" : "hover:bg-slate-800/50 text-slate-300";
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
-      <SidebarHeader className="p-4">
+    <Sidebar className={`${collapsed ? "w-14" : "w-60"} bg-slate-950 border-slate-700`} collapsible="icon">
+      <SidebarHeader className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-2">
           <img 
             src="/lovable-uploads/5b04634a-8b34-4b3f-b5d4-9ca573b411f1.png" 
@@ -55,14 +55,14 @@ export function AdminSidebar() {
             className="h-8 w-8"
           />
           {!collapsed && (
-            <span className="font-semibold text-lg">Admin Panel</span>
+            <span className="font-semibold text-lg text-white">Admin Panel</span>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="bg-slate-950">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -70,7 +70,7 @@ export function AdminSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end className={getNavCls}>
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span className="text-sm">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -80,8 +80,8 @@ export function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <SidebarMenuButton onClick={signOut} className="w-full">
+      <SidebarFooter className="p-4 border-t border-slate-700 bg-slate-950">
+        <SidebarMenuButton onClick={signOut} className="w-full text-slate-300 hover:bg-slate-800/50 hover:text-white">
           <LogOut className="h-4 w-4" />
           {!collapsed && <span>Sign Out</span>}
         </SidebarMenuButton>
