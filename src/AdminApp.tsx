@@ -1,63 +1,53 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { supabase } from '@/integrations/supabase/client';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from "@/integrations/supabase/client";
 import AdminRoutes from "./components/AdminRoutes";
-import AdminLogin from "./components/AdminLogin";
 
 const queryClient = new QueryClient();
 
 const AdminApp = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
         setIsLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
-    });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogin = async (email: string, password: string) => {
-    setLoginLoading(true);
-    setLoginError(null);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Login failed');
-      throw error;
-    } finally {
-      setLoginLoading(false);
+  useEffect(() => {
+    // Check if user is admin when session exists
+    if (session) {
+      supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (error || data?.role !== 'admin') {
+            window.location.href = 'https://course.irise.academy';
+          }
+        });
     }
-  };
+  }, [session]);
 
   if (isLoading) {
     return (
@@ -70,17 +60,23 @@ const AdminApp = () => {
     );
   }
 
-  if (!user || !session) {
+  if (!session) {
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <AdminLogin 
-            onLogin={handleLogin}
-            isLoading={loginLoading}
-            error={loginError}
-          />
+          <div className="flex h-screen items-center justify-center bg-slate-900">
+            <div className="w-96">
+              <h1 className="text-white text-2xl mb-4">Admin Login</h1>
+              <Auth
+                supabaseClient={supabase}
+                appearance={{ theme: ThemeSupa }}
+                providers={[]}
+                redirectTo="https://admin.irise.academy"
+              />
+            </div>
+          </div>
         </TooltipProvider>
       </QueryClientProvider>
     );

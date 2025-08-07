@@ -222,6 +222,7 @@ export type Database = {
           display_name: string | null
           email_2fa_enabled: boolean | null
           id: string
+          role: string | null
           totp_enabled: boolean | null
           totp_secret: string | null
           updated_at: string
@@ -234,6 +235,7 @@ export type Database = {
           display_name?: string | null
           email_2fa_enabled?: boolean | null
           id?: string
+          role?: string | null
           totp_enabled?: boolean | null
           totp_secret?: string | null
           updated_at?: string
@@ -246,6 +248,7 @@ export type Database = {
           display_name?: string | null
           email_2fa_enabled?: boolean | null
           id?: string
+          role?: string | null
           totp_enabled?: boolean | null
           totp_secret?: string | null
           updated_at?: string
