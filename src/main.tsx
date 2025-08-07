@@ -1,5 +1,10 @@
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import AdminApp from './AdminApp.tsx'
+import PublicApp from './PublicApp.tsx'
 import './index.css'
 
-createRoot(document.getElementById("root")!).render(<App />);
+const mode = import.meta.env.VITE_MODE || 'public';
+
+createRoot(document.getElementById("root")!).render(
+  mode === 'admin' ? <AdminApp /> : <PublicApp />
+);
