@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+            "build:public": "VITE_MODE=public vite build",
+"build:admin": "VITE_MODE=admin vite build"
     "lint": "eslint .",
     "preview": "vite preview"
   },
