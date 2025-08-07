@@ -17,21 +17,8 @@ const PublicRoutes = () => (
 );
 
 const App = () => {
-  const mode = import.meta.env.VITE_APP_MODE || 'public';
   const hostname = window.location.hostname;
-
-  // Auto-redirect if user hits wrong subdomain
-  if (hostname.startsWith('admin')) {
-    if (mode !== 'admin') {
-      window.location.href = 'https://course.irise.academy';
-      return null;
-    }
-  } else {
-    if (mode === 'admin') {
-      window.location.href = 'https://admin.irise.academy';
-      return null;
-    }
-  }
+  const isAdmin = hostname.startsWith('admin.');
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -39,7 +26,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          {mode === 'admin' ? <AdminRoutes /> : <PublicRoutes />}
+          {isAdmin ? <AdminRoutes /> : <PublicRoutes />}
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
