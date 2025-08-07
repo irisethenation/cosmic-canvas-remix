@@ -1,0 +1,17 @@
+name = "irise-lms"
+
+# Public LMS
+[[env.public]]
+environment = "public"
+build = { command = "npm run build:public", dir = "dist" }
+routes = [
+  { pattern = "course.irise.academy/*", zone_name = "irise.academy" }
+]
+
+# Admin Panel
+[[env.admin]]
+environment = "admin"
+build = { command = "npm run build:admin", dir = "dist" }
+routes = [
+  { pattern = "admin.irise.academy/*", zone_name = "irise.academy" }
+]
