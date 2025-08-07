@@ -39,6 +39,10 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+          <p className="text-gray-300 mb-4 italic">
+            Designed and developed under the sovereign vision of:<br />
+            <span className="font-semibold">Exsurgite Omnes Qui Vocati Sentiunt</span>
+          </p>
           <p className="text-gray-400">
             © 2024 iRise Academy. All rights reserved. | Agnotology & Epistemic Sovereignty Programme™
           </p>
