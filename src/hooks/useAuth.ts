@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -18,21 +18,6 @@ export const useAuth = () => {
       async (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
-        
-        // Send welcome email when user signs up
-        if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            await supabase.functions.invoke('send-welcome-email', {
-              body: {
-                email: session.user.email,
-                name: session.user.user_metadata.full_name || 'Student',
-                program: 'Agnotology & Epistemic Sovereignty Programme™'
-              }
-            });
-          } catch (error) {
-            console.error('Failed to send welcome email:', error);
-          }
-        }
       }
     );
 
