@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Users, Award, Shield } from "lucide-react";
 
@@ -30,15 +30,15 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 lava-heading lava-adaptive-text">
               About iRise Academy
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl max-w-3xl mx-auto lava-adaptive-text opacity-80">
               Founded on the principles of epistemic sovereignty and critical thinking, 
               iRise Academy empowers individuals to navigate the complex information landscape 
               with clarity and confidence.
@@ -46,7 +46,7 @@ const About = () => {
           </div>
 
           <div className="max-w-4xl mx-auto mb-16">
-            <Card className="bg-card/50 backdrop-blur-sm border-border">
+            <Card className="lava-glass">
               <CardContent className="p-8">
                 <h2 className="text-2xl font-bold text-foreground mb-4">Our Mission</h2>
                 <p className="text-muted-foreground leading-relaxed mb-6">
@@ -64,13 +64,13 @@ const About = () => {
           </div>
 
           <div className="mb-16">
-            <h2 className="text-3xl font-bold text-foreground text-center mb-8">Our Values</h2>
+            <h2 className="text-3xl font-bold text-center mb-8 lava-heading lava-adaptive-text">Our Values</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {values.map((value, index) => (
-                <Card key={index} className="bg-card/50 backdrop-blur-sm border-border">
+                <Card key={index} className="lava-glass">
                   <CardContent className="p-6 text-center">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <value.icon className="h-6 w-6 text-primary" />
+                    <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <value.icon className="h-6 w-6 text-amber-400" />
                     </div>
                     <h3 className="font-semibold text-foreground mb-2">{value.title}</h3>
                     <p className="text-sm text-muted-foreground">{value.description}</p>
@@ -81,9 +81,9 @@ const About = () => {
           </div>
 
           <div className="text-center">
-            <Card className="bg-card/50 backdrop-blur-sm border-border inline-block">
+            <Card className="lava-glass inline-block">
               <CardContent className="p-8">
-                <p className="text-lg italic text-muted-foreground mb-4">
+                <p className="text-lg italic text-amber-400/80 mb-4">
                   "Exsurgite Omnes Qui Vocati Sentiunt"
                 </p>
                 <p className="text-sm text-muted-foreground">

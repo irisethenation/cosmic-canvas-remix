@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -37,68 +37,68 @@ const Support = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 lava-heading lava-adaptive-text">
               Support Center
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl max-w-2xl mx-auto lava-adaptive-text opacity-80">
               Find answers to common questions or reach out to our support team.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
-            <Card className="bg-card/50 backdrop-blur-sm border-border text-center">
+            <Card className="lava-glass text-center">
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Book className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Book className="h-6 w-6 text-amber-400" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">Documentation</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Browse our knowledge base
                 </p>
-                <Button variant="outline" size="sm">Coming Soon</Button>
+                <Button variant="outline" size="sm" className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10">Coming Soon</Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border text-center">
+            <Card className="lava-glass text-center">
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="h-6 w-6 text-amber-400" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">Community</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Connect with other students
                 </p>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" size="sm" asChild className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10">
                   <Link to="/community">Join Community</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border text-center">
+            <Card className="lava-glass text-center">
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-6 w-6 text-amber-400" />
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">Contact</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   Get personalized help
                 </p>
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" size="sm" asChild className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10">
                   <Link to="/contact">Contact Us</Link>
                 </Button>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-border max-w-3xl mx-auto">
+          <Card className="lava-glass max-w-3xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5" />
+                <HelpCircle className="h-5 w-5 text-amber-400" />
                 Frequently Asked Questions
               </CardTitle>
             </CardHeader>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Quote, BookOpen, Users, Award } from "lucide-react";
 
@@ -246,15 +246,15 @@ const stats = [
 const Testimonials = () => {
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 lava-heading lava-adaptive-text">
               Success Stories
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl max-w-3xl mx-auto lava-adaptive-text opacity-80">
               Real results from real students. Our programme has helped people achieve 
               victories in mortgages, family law, debt discharge, and commercial sovereignty.
             </p>
@@ -263,7 +263,7 @@ const Testimonials = () => {
           {/* Stats */}
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
             {stats.map((stat, index) => (
-              <Card key={index} className="bg-card/50 backdrop-blur-sm border-border text-center">
+              <Card key={index} className="lava-glass text-center">
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
                     <stat.icon className="h-6 w-6 text-primary" />
@@ -280,7 +280,7 @@ const Testimonials = () => {
             {testimonials.map((testimonial) => (
               <Card 
                 key={testimonial.id} 
-                className="bg-card/50 backdrop-blur-sm border-border overflow-hidden"
+                className="lava-glass overflow-hidden"
               >
                 <CardContent className="p-0">
                   <div className="grid md:grid-cols-4 gap-0">
