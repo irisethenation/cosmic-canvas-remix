@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -171,13 +172,15 @@ export const DashboardCourseGrid = () => {
                   </div>
                 )}
 
-                <Button 
-                  className="w-full bg-gradient-primary hover:opacity-90"
-                  size="sm"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  {courseProgress > 0 ? 'Continue' : 'Start Course'}
-                </Button>
+                <Link to={`/courses/${course.slug}`}>
+                  <Button 
+                    className="w-full bg-gradient-primary hover:opacity-90"
+                    size="sm"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    {courseProgress > 0 ? 'Continue' : 'Start Course'}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           );
