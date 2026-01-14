@@ -7,6 +7,12 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CourseDetail from "./pages/CourseDetail";
 import LessonPlayer from "./pages/LessonPlayer";
+import Programs from "./pages/Programs";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import Support from "./pages/Support";
+import Community from "./pages/Community";
+import Newsletter from "./pages/Newsletter";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCourseDetail from "./pages/admin/AdminCourseDetail";
@@ -22,6 +28,12 @@ const queryClient = new QueryClient();
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
+    <Route path="/programs" element={<Programs />} />
+    <Route path="/about" element={<About />} />
+    <Route path="/contact" element={<Contact />} />
+    <Route path="/support" element={<Support />} />
+    <Route path="/community" element={<Community />} />
+    <Route path="/newsletter" element={<Newsletter />} />
     <Route 
       path="/dashboard" 
       element={
