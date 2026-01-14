@@ -1,6 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import GeometricBackground from '@/components/GeometricBackground';
+import LavaLampBackground from '@/components/LavaLampBackground';
 import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
 import { ProgressSummary } from '@/components/dashboard/ProgressSummary';
 import { DashboardCourseGrid } from '@/components/dashboard/DashboardCourseGrid';
@@ -12,7 +12,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">

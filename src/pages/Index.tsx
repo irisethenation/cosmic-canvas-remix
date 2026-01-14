@@ -5,12 +5,12 @@ import CourseGrid from "@/components/CourseGrid";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ProgramDetailsSection from "@/components/ProgramDetailsSection";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <HeroSection />
