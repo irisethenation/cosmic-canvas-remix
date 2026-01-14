@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      agreements: {
+        Row: {
+          content_markdown: string
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          title: string
+          version: string
+        }
+        Insert: {
+          content_markdown: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          title: string
+          version?: string
+        }
+        Update: {
+          content_markdown?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           cover_url: string | null
@@ -21,10 +51,12 @@ export type Database = {
           description_md: string
           id: string
           is_published: boolean
+          key: string | null
           slug: string
           tier_required: number
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           cover_url?: string | null
@@ -32,10 +64,12 @@ export type Database = {
           description_md?: string
           id?: string
           is_published?: boolean
+          key?: string | null
           slug: string
           tier_required?: number
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           cover_url?: string | null
@@ -43,10 +77,12 @@ export type Database = {
           description_md?: string
           id?: string
           is_published?: boolean
+          key?: string | null
           slug?: string
           tier_required?: number
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -57,7 +93,10 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          last_position_seconds: number | null
           lesson_id: string
+          percent_complete: number
+          status: string
           updated_at: string
           user_id: string
         }
@@ -67,7 +106,10 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          last_position_seconds?: number | null
           lesson_id: string
+          percent_complete?: number
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -77,7 +119,10 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          last_position_seconds?: number | null
           lesson_id?: string
+          percent_complete?: number
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -101,9 +146,14 @@ export type Database = {
       lessons: {
         Row: {
           content_md: string | null
+          content_text: string | null
+          content_type: string
+          content_url: string | null
           created_at: string
+          duration_seconds: number | null
           id: string
           is_free: boolean
+          is_published: boolean
           module_id: string
           order_index: number
           title: string
@@ -112,9 +162,14 @@ export type Database = {
         }
         Insert: {
           content_md?: string | null
+          content_text?: string | null
+          content_type?: string
+          content_url?: string | null
           created_at?: string
+          duration_seconds?: number | null
           id?: string
           is_free?: boolean
+          is_published?: boolean
           module_id: string
           order_index?: number
           title: string
@@ -123,9 +178,14 @@ export type Database = {
         }
         Update: {
           content_md?: string | null
+          content_text?: string | null
+          content_type?: string
+          content_url?: string | null
           created_at?: string
+          duration_seconds?: number | null
           id?: string
           is_free?: boolean
+          is_published?: boolean
           module_id?: string
           order_index?: number
           title?: string
@@ -147,7 +207,9 @@ export type Database = {
           course_id: string
           created_at: string
           id: string
+          is_published: boolean
           order_index: number
+          summary: string | null
           title: string
           updated_at: string
         }
@@ -155,7 +217,9 @@ export type Database = {
           course_id: string
           created_at?: string
           id?: string
+          is_published?: boolean
           order_index?: number
+          summary?: string | null
           title: string
           updated_at?: string
         }
@@ -163,7 +227,9 @@ export type Database = {
           course_id?: string
           created_at?: string
           id?: string
+          is_published?: boolean
           order_index?: number
+          summary?: string | null
           title?: string
           updated_at?: string
         }
@@ -173,6 +239,113 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notices: {
+        Row: {
+          audience: string
+          body_markdown: string
+          created_at: string
+          id: string
+          is_published: boolean
+          publish_at: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body_markdown: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          publish_at?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body_markdown?: string
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          publish_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          provider: string
+          provider_customer_id: string | null
+          provider_subscription_id: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier_key: Database["public"]["Enums"]["subscription_tier"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier_key: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          provider?: string
+          provider_customer_id?: string | null
+          provider_subscription_id?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier_key?: Database["public"]["Enums"]["subscription_tier"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_agreements: {
+        Row: {
+          accepted_at: string
+          agreement_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          agreement_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          agreement_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_agreements_agreement_id_fkey"
+            columns: ["agreement_id"]
+            isOneToOne: false
+            referencedRelation: "agreements"
             referencedColumns: ["id"]
           },
         ]
@@ -201,15 +374,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "VISITOR"
+        | "STUDENT_KEY_MASTER"
+        | "GRADUATE_LEARNED_MASTER_BUILDER"
+        | "AMBASSADOR"
+        | "ADMIN"
+        | "SUPER_ADMIN"
+      subscription_status:
+        | "TRIALING"
+        | "ACTIVE"
+        | "PAST_DUE"
+        | "CANCELED"
+        | "INCOMPLETE"
+      subscription_tier:
+        | "TIER_1_KEY_MASTER"
+        | "TIER_2_LEARNED_MASTER_BUILDER"
+        | "TIER_3_PRIVATE_MENTORSHIP"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -336,6 +557,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "VISITOR",
+        "STUDENT_KEY_MASTER",
+        "GRADUATE_LEARNED_MASTER_BUILDER",
+        "AMBASSADOR",
+        "ADMIN",
+        "SUPER_ADMIN",
+      ],
+      subscription_status: [
+        "TRIALING",
+        "ACTIVE",
+        "PAST_DUE",
+        "CANCELED",
+        "INCOMPLETE",
+      ],
+      subscription_tier: [
+        "TIER_1_KEY_MASTER",
+        "TIER_2_LEARNED_MASTER_BUILDER",
+        "TIER_3_PRIVATE_MENTORSHIP",
+      ],
+    },
   },
 } as const
