@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import CourseGrid from "@/components/CourseGrid";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import ProgramDetailsSection from "@/components/ProgramDetailsSection";
 import Footer from "@/components/Footer";
 import GeometricBackground from "@/components/GeometricBackground";
@@ -15,6 +16,7 @@ const Index = () => {
         <HeroSection />
         <FeaturesSection />
         <CourseGrid />
+        <TestimonialsSection />
         <ProgramDetailsSection />
         <Footer />
       </div>
