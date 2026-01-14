@@ -5,8 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { BookOpen, Lock, Play, Star } from "lucide-react";
+import { BookOpen, Lock, Play, Star, Clock, FileText, Video, Headphones, ChevronRight } from "lucide-react";
 
 interface Course {
   id: string;
@@ -16,81 +15,77 @@ interface Course {
   description_md: string;
   cover_url: string | null;
   is_published: boolean;
-  lessons: {
-    id: string;
-    is_free: boolean;
-  }[];
 }
 
-interface LessonProgress {
+interface Module {
   id: string;
-  lesson_id: string;
-  course_id: string;
-  completed: boolean;
+  title: string;
+  summary: string | null;
+  order_index: number;
+  lessons: Lesson[];
 }
 
-interface UserProfile {
-  user_tier: number;
+interface Lesson {
+  id: string;
+  title: string;
+  content_type: string;
+  duration_seconds: number | null;
+  is_free: boolean;
+  order_index: number;
 }
 
 const CourseGrid = () => {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [lessonProgress, setLessonProgress] = useState<LessonProgress[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch user profile to get tier
-        if (user) {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('user_tier')
-            .eq('user_id', user.id)
-            .single();
-          
-          setUserProfile(profile);
-        }
-
-        // Determine user tier
-        const userTier = userProfile?.user_tier || 0;
-
-        // Fetch courses with lessons, filtered by user tier
-        const { data: coursesData, error: coursesError } = await supabase
+        // Fetch the main course
+        const { data: courseData, error: courseError } = await supabase
           .from('courses')
-          .select(`
-            *,
-            modules!inner(
-              lessons(id, is_free)
-            )
-          `)
+          .select('*')
           .eq('is_published', true)
-          .lte('tier_required', user ? userTier : 0)
-          .order('tier_required', { ascending: true });
+          .eq('slug', 'agnotology-epistemic-sovereignty')
+          .maybeSingle();
 
-        if (coursesError) throw coursesError;
+        if (courseError) throw courseError;
+        setCourse(courseData);
 
-        // Flatten lessons from modules
-        const coursesWithLessons = coursesData?.map(course => ({
-          ...course,
-          lessons: course.modules?.flatMap(module => module.lessons) || []
-        })) || [];
+        if (courseData) {
+          // Fetch modules with lessons
+          const { data: modulesData, error: modulesError } = await supabase
+            .from('modules')
+            .select(`
+              id,
+              title,
+              summary,
+              order_index,
+              lessons (
+                id,
+                title,
+                content_type,
+                duration_seconds,
+                is_free,
+                order_index
+              )
+            `)
+            .eq('course_id', courseData.id)
+            .eq('is_published', true)
+            .order('order_index', { ascending: true });
 
-        setCourses(coursesWithLessons);
-
-        // Fetch lesson progress if user is logged in
-        if (user) {
-          const { data: progressData, error: progressError } = await supabase
-            .from('lesson_progress')
-            .select('*')
-            .eq('user_id', user.id);
-
-          if (progressError) throw progressError;
-          setLessonProgress(progressData || []);
+          if (modulesError) throw modulesError;
+          
+          // Sort lessons within each module
+          const sortedModules = (modulesData || []).map(module => ({
+            ...module,
+            lessons: (module.lessons || []).sort((a, b) => a.order_index - b.order_index)
+          }));
+          
+          setModules(sortedModules);
         }
-
       } catch (error) {
         console.error('Error fetching course data:', error);
       } finally {
@@ -99,193 +94,213 @@ const CourseGrid = () => {
     };
 
     fetchData();
-  }, [user, userProfile?.user_tier]);
+  }, [user]);
 
-  const getTierColor = (tier: number) => {
-    switch (tier) {
-      case 0: return "bg-green-100 text-green-800 border-green-200";
-      case 1: return "bg-blue-100 text-blue-800 border-blue-200";
-      case 2: return "bg-purple-100 text-purple-800 border-purple-200";
-      case 3: return "bg-orange-100 text-orange-800 border-orange-200";
-      case 4: return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+  const getContentIcon = (type: string) => {
+    switch (type) {
+      case 'VIDEO': return <Video className="h-4 w-4" />;
+      case 'AUDIO': return <Headphones className="h-4 w-4" />;
+      case 'PDF': return <FileText className="h-4 w-4" />;
+      default: return <FileText className="h-4 w-4" />;
     }
   };
 
-  const getTierLabel = (tier: number) => {
-    switch (tier) {
-      case 0: return "Free Preview";
-      case 1: return "Foundation";
-      case 2: return "Intermediate";
-      case 3: return "Advanced";
-      case 4: return "Expert";
-      default: return `Tier ${tier}`;
-    }
+  const formatDuration = (seconds: number | null) => {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    return `${mins} min`;
   };
 
-  const getCourseProgress = (courseId: string) => {
-    const courseProgressItems = lessonProgress.filter(p => p.course_id === courseId);
-    const completedCount = courseProgressItems.filter(p => p.completed).length;
-    const totalLessons = courses.find(c => c.id === courseId)?.lessons.length || 0;
-    
-    if (totalLessons === 0) return 0;
-    return Math.round((completedCount / totalLessons) * 100);
-  };
-
-  const hasFreeLessons = (course: Course) => {
-    return course.lessons.some(lesson => lesson.is_free);
-  };
-
-  const isLocked = (course: Course) => {
-    const userTier = userProfile?.user_tier || 0;
-    return course.tier_required > userTier;
-  };
+  const previewModule = modules.find(m => m.order_index === 0);
+  const otherModules = modules.filter(m => m.order_index > 0);
 
   if (loading) {
     return (
       <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-              Loading Courses...
-            </h2>
+            <div className="animate-pulse">
+              <div className="h-8 bg-muted rounded w-64 mx-auto mb-4"></div>
+              <div className="h-4 bg-muted rounded w-96 mx-auto"></div>
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
+  if (!course) {
+    return (
+      <section className="py-20 bg-surface">
+        <div className="container mx-auto px-4 text-center">
+          <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">Course Coming Soon</h2>
+          <p className="text-muted-foreground">Check back soon for our full programme.</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="py-20 bg-surface">
+    <section className="py-20 bg-surface" id="programs">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-            Your Course Library
+        {/* Course Header */}
+        <div className="text-center mb-12">
+          <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+            <Star className="h-3 w-3 mr-1" />
+            Complete Programme
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            {course.title}
           </h2>
-          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
-            {user 
-              ? `Access courses up to Tier ${userProfile?.user_tier || 0}. Complete lessons to unlock higher tiers.`
-              : "Sign up to access premium courses and track your progress."
-            }
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            {course.description_md}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => {
-            const progress = getCourseProgress(course.id);
-            const locked = isLocked(course);
-            const hasFree = hasFreeLessons(course);
+        {/* Free Preview Module */}
+        {previewModule && (
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <Play className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Free Preview</h3>
+                <p className="text-sm text-muted-foreground">Start learning today — no signup required</p>
+              </div>
+              <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
+                Free Access
+              </Badge>
+            </div>
 
-            return (
-              <Card key={course.id} className={`hover:shadow-lg transition-all duration-300 ${locked ? 'opacity-60' : ''}`}>
-                {course.cover_url && (
-                  <div className="aspect-video w-full overflow-hidden rounded-t-lg">
-                    <img 
-                      src={course.cover_url} 
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+            <Card className="bg-card/50 backdrop-blur-sm border-border overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-b border-border">
+                <CardTitle className="text-lg">{previewModule.title}</CardTitle>
+                {previewModule.summary && (
+                  <CardDescription>{previewModule.summary}</CardDescription>
                 )}
-                
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-text-primary mb-2">
-                        {course.title}
-                      </CardTitle>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getTierColor(course.tier_required)} mb-2`}
-                      >
-                        {getTierLabel(course.tier_required)}
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {previewModule.lessons.map((lesson, index) => (
+                    <Link
+                      key={lesson.id}
+                      to={user ? `/lessons/${lesson.id}` : '#'}
+                      className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors group"
+                      onClick={(e) => {
+                        if (!user) {
+                          e.preventDefault();
+                          // Could trigger auth modal here
+                        }
+                      }}
+                    >
+                      <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-sm font-medium text-green-700 dark:text-green-400">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors">
+                          {lesson.title}
+                        </p>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            {getContentIcon(lesson.content_type)}
+                            {lesson.content_type}
+                          </span>
+                          {lesson.duration_seconds && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {formatDuration(lesson.duration_seconds)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                        Free
                       </Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Full Programme Modules */}
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-foreground">Full Programme Curriculum</h3>
+              <p className="text-sm text-muted-foreground">{otherModules.length} modules • {otherModules.reduce((acc, m) => acc + m.lessons.length, 0)} lessons</p>
+            </div>
+            <Badge variant="outline" className="ml-auto">
+              <Lock className="h-3 w-3 mr-1" />
+              Subscription Required
+            </Badge>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {otherModules.map((module) => (
+              <Card 
+                key={module.id} 
+                className="bg-card/50 backdrop-blur-sm border-border hover:shadow-md transition-all group"
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                      {module.order_index}
                     </div>
-                    <div className="ml-2">
-                      {locked ? (
-                        <Lock className="h-5 w-5 text-text-muted" />
-                      ) : course.tier_required === 0 ? (
-                        <Star className="h-5 w-5 text-yellow-500" />
-                      ) : (
-                        <BookOpen className="h-5 w-5 text-primary" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground text-sm leading-tight mb-1 line-clamp-2">
+                        {module.title.replace(`Module ${module.order_index} — `, '')}
+                      </h4>
+                      {module.summary && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {module.summary}
+                        </p>
                       )}
                     </div>
                   </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <CardDescription className="text-text-secondary mb-4 line-clamp-3">
-                    {course.description_md.replace(/\*\*/g, '')}
-                  </CardDescription>
-                  
-                  {user && !locked && progress > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-sm text-text-muted mb-1">
-                        <span>Progress</span>
-                        <span>{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-text-muted">
-                      <BookOpen className="h-4 w-4 mr-1" />
-                      <span>{course.lessons.length} lessons</span>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      {hasFree && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="flex items-center gap-1"
-                          asChild
-                        >
-                          <Link to={`/courses/${course.slug}`}>
-                            <Play className="h-3 w-3" />
-                            Preview
-                          </Link>
-                        </Button>
-                      )}
-                      
-                      <Button 
-                        variant={locked ? "outline" : "default"}
-                        size="sm"
-                        disabled={locked}
-                        className={!locked && course.tier_required === 0 ? "bg-gradient-primary" : ""}
-                        asChild={!locked}
-                      >
-                        {locked ? (
-                          <span>Locked</span>
-                        ) : (
-                          <Link to={`/courses/${course.slug}`}>
-                            {progress > 0 ? "Continue" : "Start"}
-                          </Link>
-                        )}
-                      </Button>
-                    </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border">
+                    <span className="flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" />
+                      {module.lessons.length} lessons
+                    </span>
+                    <Lock className="h-3 w-3" />
                   </div>
                 </CardContent>
               </Card>
-            );
-          })}
-        </div>
-
-        {courses.length === 0 && (
-          <div className="text-center py-12">
-            <Lock className="h-16 w-16 text-text-muted mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-text-primary mb-2">
-              No Courses Available
-            </h3>
-            <p className="text-text-secondary">
-              {user 
-                ? "Complete lower tier courses to unlock new content."
-                : "Sign up to access our course library."
-              }
-            </p>
+            ))}
           </div>
-        )}
+
+          {/* CTA */}
+          <div className="mt-10 text-center">
+            <Card className="bg-primary/5 border-primary/20 max-w-xl mx-auto">
+              <CardContent className="p-6">
+                <h4 className="font-bold text-foreground mb-2">Unlock the Full Programme</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Get access to all 12 modules, 68+ lessons, and exclusive resources.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button asChild>
+                    <Link to="/courses/agnotology-epistemic-sovereignty">
+                      View Full Course
+                    </Link>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/pricing">
+                      See Pricing
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </section>
   );
