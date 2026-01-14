@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import CourseDetail from "./pages/CourseDetail";
+import LessonPlayer from "./pages/LessonPlayer";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -18,6 +20,15 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } 
+    />
+    <Route path="/courses/:slug" element={<CourseDetail />} />
+    <Route 
+      path="/lessons/:lessonId" 
+      element={
+        <ProtectedRoute>
+          <LessonPlayer />
         </ProtectedRoute>
       } 
     />
