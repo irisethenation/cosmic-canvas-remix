@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, MessageSquare, Calendar, Award } from "lucide-react";
@@ -31,24 +31,24 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 lava-heading lava-adaptive-text">
               iRise Community
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl max-w-2xl mx-auto lava-adaptive-text opacity-80">
               Connect with a global network of truth-seekers, researchers, and independent thinkers 
               committed to epistemic sovereignty.
             </p>
           </div>
 
-          <Card className="bg-card/50 backdrop-blur-sm border-border max-w-2xl mx-auto mb-12">
+          <Card className="lava-glass max-w-2xl mx-auto mb-12">
             <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="h-8 w-8 text-primary" />
+              <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="h-8 w-8 text-amber-400" />
               </div>
               <h2 className="text-2xl font-bold text-foreground mb-4">
                 Community Coming Soon
@@ -57,7 +57,7 @@ const Community = () => {
                 We're building a vibrant community platform for iRise Academy students. 
                 Sign up for updates to be notified when we launch.
               </p>
-              <Button size="lg">
+              <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white">
                 Get Notified
               </Button>
             </CardContent>
@@ -65,11 +65,11 @@ const Community = () => {
 
           <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-card/50 backdrop-blur-sm border-border">
+              <Card key={index} className="lava-glass">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                    <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center shrink-0">
+                      <feature.icon className="h-6 w-6 text-amber-400" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>

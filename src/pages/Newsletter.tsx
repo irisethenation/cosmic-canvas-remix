@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import GeometricBackground from "@/components/GeometricBackground";
+import LavaLampBackground from "@/components/LavaLampBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,15 +50,15 @@ const Newsletter = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <GeometricBackground />
+      <LavaLampBackground />
       <div className="relative z-10">
         <Header />
         <main className="container mx-auto px-4 py-16">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 lava-heading lava-adaptive-text">
               Stay Informed
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-xl max-w-2xl mx-auto lava-adaptive-text opacity-80">
               Subscribe to our newsletter for the latest insights on epistemic sovereignty, 
               critical thinking, and truth-seeking.
             </p>
@@ -66,15 +66,15 @@ const Newsletter = () => {
 
           <div className="grid lg:grid-cols-2 gap-12 max-w-5xl mx-auto items-start">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">
+              <h2 className="text-2xl font-bold mb-6 lava-adaptive-text">
                 What You'll Get
               </h2>
               <div className="space-y-4">
                 {benefits.map((benefit, index) => (
-                  <Card key={index} className="bg-card/50 backdrop-blur-sm border-border">
+                  <Card key={index} className="lava-glass">
                     <CardContent className="p-4 flex items-start gap-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                        <benefit.icon className="h-5 w-5 text-primary" />
+                      <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center shrink-0">
+                        <benefit.icon className="h-5 w-5 text-amber-400" />
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground">{benefit.title}</h3>
@@ -86,10 +86,10 @@ const Newsletter = () => {
               </div>
             </div>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border">
+            <Card className="lava-glass">
               <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Mail className="h-8 w-8 text-primary" />
+                <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Mail className="h-8 w-8 text-amber-400" />
                 </div>
                 <h2 className="text-xl font-bold text-foreground text-center mb-6">
                   Subscribe to Our Newsletter
@@ -97,11 +97,11 @@ const Newsletter = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" required placeholder="Your name" />
+                    <Input id="name" required placeholder="Your name" className="bg-background/50" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required placeholder="your@email.com" />
+                    <Input id="email" type="email" required placeholder="your@email.com" className="bg-background/50" />
                   </div>
                   <div className="flex items-start space-x-2">
                     <Checkbox id="consent" required />
@@ -110,7 +110,7 @@ const Newsletter = () => {
                       You can unsubscribe at any time.
                     </Label>
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" disabled={isSubmitting}>
                     {isSubmitting ? "Subscribing..." : "Subscribe"}
                   </Button>
                 </form>
