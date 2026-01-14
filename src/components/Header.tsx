@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import AuthModal from "./AuthModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,25 +18,25 @@ const Header = () => {
     <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center space-x-3">
             <img 
               src="/lovable-uploads/7839be91-7988-4489-9261-258c18f256b1.png" 
               alt="iRise Academy Seal" 
               className="w-12 h-12"
             />
             <h1 className="text-xl font-bold text-text-primary">iRise Academy</h1>
-          </div>
+          </Link>
           
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#programs" className="text-text-secondary hover:text-text-primary transition-colors">
+            <Link to="/programs" className="text-text-secondary hover:text-text-primary transition-colors">
               Programs
-            </a>
-            <a href="#about" className="text-text-secondary hover:text-text-primary transition-colors">
+            </Link>
+            <Link to="/about" className="text-text-secondary hover:text-text-primary transition-colors">
               About
-            </a>
-            <a href="#contact" className="text-text-secondary hover:text-text-primary transition-colors">
+            </Link>
+            <Link to="/contact" className="text-text-secondary hover:text-text-primary transition-colors">
               Contact
-            </a>
+            </Link>
           </nav>
 
           <div className="flex items-center space-x-4">
