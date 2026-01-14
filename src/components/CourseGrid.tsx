@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -239,9 +240,12 @@ const CourseGrid = () => {
                           variant="outline" 
                           size="sm"
                           className="flex items-center gap-1"
+                          asChild
                         >
-                          <Play className="h-3 w-3" />
-                          Preview
+                          <Link to={`/courses/${course.slug}`}>
+                            <Play className="h-3 w-3" />
+                            Preview
+                          </Link>
                         </Button>
                       )}
                       
@@ -250,8 +254,15 @@ const CourseGrid = () => {
                         size="sm"
                         disabled={locked}
                         className={!locked && course.tier_required === 0 ? "bg-gradient-primary" : ""}
+                        asChild={!locked}
                       >
-                        {locked ? "Locked" : progress > 0 ? "Continue" : "Start"}
+                        {locked ? (
+                          <span>Locked</span>
+                        ) : (
+                          <Link to={`/courses/${course.slug}`}>
+                            {progress > 0 ? "Continue" : "Start"}
+                          </Link>
+                        )}
                       </Button>
                     </div>
                   </div>
