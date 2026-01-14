@@ -44,6 +44,47 @@ export type Database = {
         }
         Relationships: []
       }
+      case_messages: {
+        Row: {
+          case_id: string | null
+          content: string
+          created_at: string
+          id: string
+          message_type: string | null
+          metadata: Json | null
+          sender: string
+          telegram_message_id: number | null
+        }
+        Insert: {
+          case_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender: string
+          telegram_message_id?: number | null
+        }
+        Update: {
+          case_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string | null
+          metadata?: Json | null
+          sender?: string
+          telegram_message_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           cover_url: string | null
@@ -312,6 +353,42 @@ export type Database = {
           tier_key?: Database["public"]["Enums"]["subscription_tier"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      support_cases: {
+        Row: {
+          created_at: string
+          current_agent: string | null
+          id: string
+          status: string | null
+          telegram_chat_id: number
+          telegram_user_id: number
+          telegram_username: string | null
+          updated_at: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_agent?: string | null
+          id?: string
+          status?: string | null
+          telegram_chat_id: number
+          telegram_user_id: number
+          telegram_username?: string | null
+          updated_at?: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_agent?: string | null
+          id?: string
+          status?: string | null
+          telegram_chat_id?: number
+          telegram_user_id?: number
+          telegram_username?: string | null
+          updated_at?: string
+          vapi_call_id?: string | null
         }
         Relationships: []
       }
