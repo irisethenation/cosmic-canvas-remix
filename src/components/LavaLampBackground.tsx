@@ -13,7 +13,7 @@ interface Blob {
   hue: number;
   saturation: number;
   brightness: number;
-  density: number; // Affects buoyancy
+  density: number;
 }
 
 const LavaLampBackground = () => {
@@ -26,10 +26,19 @@ const LavaLampBackground = () => {
     const sketch = (p: p5) => {
       let blobs: Blob[] = [];
       const numBlobs = 6;
-      const gravity = 0.0008; // Very subtle gravity
-      const buoyancy = 0.001; // Upward force when warm
-      const friction = 0.998; // Slow down over time
-      const noiseScale = 0.0003; // Very slow noise evolution
+      const gravity = 0.0008;
+      const buoyancy = 0.001;
+      const friction = 0.998;
+      const noiseScale = 0.0003;
+      
+      // Mouse tracking
+      let mouseX = p.windowWidth / 2;
+      let mouseY = p.windowHeight / 2;
+      let targetMouseX = mouseX;
+      let targetMouseY = mouseY;
+      const mouseSmoothing = 0.08;
+      const mouseAttractionStrength = 0.00015;
+      const mouseAttractionRadius = 400;
 
       p.setup = () => {
         const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
@@ -40,12 +49,11 @@ const LavaLampBackground = () => {
         p.colorMode(p.HSB, 360, 100, 100, 100);
         p.noStroke();
 
-        // Initialize blobs with realistic properties
         for (let i = 0; i < numBlobs; i++) {
           const baseHue = p.random([
-            p.random(15, 35),   // Deep amber/orange
-            p.random(35, 50),   // Golden yellow
-            p.random(5, 20),    // Warm red-orange
+            p.random(15, 35),
+            p.random(35, 50),
+            p.random(5, 20),
           ]);
           
           blobs.push({
@@ -65,25 +73,52 @@ const LavaLampBackground = () => {
         }
       };
 
+      p.mouseMoved = () => {
+        targetMouseX = p.mouseX;
+        targetMouseY = p.mouseY;
+      };
+
       p.draw = () => {
-        // Deep dark background - slight warm tint
+        // Smooth mouse position
+        mouseX += (targetMouseX - mouseX) * mouseSmoothing;
+        mouseY += (targetMouseY - mouseY) * mouseSmoothing;
+
         p.background(225, 35, 6);
 
-        // Update physics for each blob
         for (let blob of blobs) {
-          // Temperature-based buoyancy (bottom is warmer)
+          // Temperature-based buoyancy
           const heatFactor = p.map(blob.y, 0, p.height, -0.5, 1);
           const buoyancyForce = (buoyancy * heatFactor) / blob.density;
           
-          // Apply forces
-          blob.vy += gravity * blob.density; // Gravity
-          blob.vy -= buoyancyForce; // Buoyancy (opposes gravity when warm)
+          blob.vy += gravity * blob.density;
+          blob.vy -= buoyancyForce;
           
-          // Very subtle noise-based lateral movement
+          // Noise-based movement
           const noiseX = p.noise(blob.noiseOffsetX) - 0.5;
           const noiseY = p.noise(blob.noiseOffsetY) - 0.5;
           blob.vx += noiseX * 0.003;
           blob.vy += noiseY * 0.001;
+
+          // Mouse attraction
+          const dx = mouseX - blob.x;
+          const dy = mouseY - blob.y;
+          const distance = p.sqrt(dx * dx + dy * dy);
+          
+          if (distance < mouseAttractionRadius && distance > 0) {
+            // Attraction strength falls off with distance
+            const attractionFalloff = p.map(distance, 0, mouseAttractionRadius, 1, 0);
+            const attractionForce = mouseAttractionStrength * attractionFalloff * attractionFalloff;
+            
+            // Normalize direction and apply force
+            const normalizedDx = dx / distance;
+            const normalizedDy = dy / distance;
+            
+            blob.vx += normalizedDx * attractionForce * blob.baseR;
+            blob.vy += normalizedDy * attractionForce * blob.baseR;
+            
+            // Subtle size pulse when near cursor
+            blob.baseR += p.sin(p.frameCount * 0.1) * attractionFalloff * 0.3;
+          }
           
           // Apply friction
           blob.vx *= friction;
@@ -114,16 +149,14 @@ const LavaLampBackground = () => {
           }
           if (blob.y > p.height - margin) {
             blob.y = p.height - margin;
-            blob.vy *= -0.5; // Stronger bounce at bottom (heated)
+            blob.vy *= -0.5;
           }
         }
 
-        // Draw blobs with metaball-like effect
-        // First pass: draw glow layers
+        // Draw glow layers
         for (let blob of blobs) {
           const morphR = blob.baseR + p.sin(p.frameCount * 0.008 + blob.noiseOffsetR * 100) * 15;
           
-          // Outer glow
           for (let i = 4; i >= 0; i--) {
             const glowAlpha = p.map(i, 4, 0, 2, 12);
             const glowSize = morphR * (1 + i * 0.4);
@@ -132,11 +165,10 @@ const LavaLampBackground = () => {
           }
         }
         
-        // Second pass: draw main blob bodies
+        // Draw main blob bodies
         for (let blob of blobs) {
           const morphR = blob.baseR + p.sin(p.frameCount * 0.008 + blob.noiseOffsetR * 100) * 15;
           
-          // Inner gradient layers
           for (let i = 3; i >= 0; i--) {
             const layerAlpha = p.map(i, 3, 0, 25, 65);
             const layerSize = morphR * (0.4 + i * 0.2);
@@ -151,7 +183,15 @@ const LavaLampBackground = () => {
           p.ellipse(blob.x, blob.y - morphR * 0.1, coreSize, coreSize * 0.8);
         }
 
-        // Subtle glass/liquid refraction overlay
+        // Subtle cursor glow
+        if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
+          for (let i = 3; i >= 0; i--) {
+            const glowSize = 50 + i * 40;
+            p.fill(40, 60, 80, 2 - i * 0.5);
+            p.ellipse(mouseX, mouseY, glowSize);
+          }
+        }
+
         drawRefractionOverlay(p);
       };
 
@@ -174,7 +214,6 @@ const LavaLampBackground = () => {
       };
 
       const drawRefractionOverlay = (p: p5) => {
-        // Subtle vertical gradient for glass effect
         const gradientSteps = 5;
         for (let i = 0; i < gradientSteps; i++) {
           const y = p.map(i, 0, gradientSteps, 0, p.height);
