@@ -1,8 +1,20 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import AuthModal from "./AuthModal";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const { user, signOut } = useAuth();
+
+  const openAuth = (mode: "login" | "signup") => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
   return (
-    <header className="bg-background border-b border-border">
+    <header className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -27,15 +39,45 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-text-secondary hover:text-text-primary">
-              Login
-            </Button>
-            <Button className="bg-gradient-primary shadow-soft">
-              Get Started
-            </Button>
+            {user ? (
+              <>
+                <span className="text-sm text-text-secondary hidden sm:block">
+                  {user.email}
+                </span>
+                <Button 
+                  variant="ghost" 
+                  className="text-text-secondary hover:text-text-primary"
+                  onClick={signOut}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="text-text-secondary hover:text-text-primary"
+                  onClick={() => openAuth("login")}
+                >
+                  Login
+                </Button>
+                <Button 
+                  className="bg-gradient-primary shadow-soft"
+                  onClick={() => openAuth("signup")}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
+
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen}
+        defaultMode={authMode}
+      />
     </header>
   );
 };

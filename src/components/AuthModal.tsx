@@ -1,22 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultMode?: "login" | "signup";
 }
 
-const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
-  const [isLogin, setIsLogin] = useState(true);
+const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps) => {
+  const [isLogin, setIsLogin] = useState(defaultMode === "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setIsLogin(defaultMode === "login");
+  }, [defaultMode, open]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,6 +48,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           options: {
             emailRedirectTo: window.location.origin,
             data: {
+              full_name: fullName,
               enrollment_date: new Date().toISOString(),
               program: "Agnotology & Epistemic Sovereignty Programme™"
             }
@@ -52,10 +59,13 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         
         toast({
           title: "Registration successful!",
-          description: "Please check your email to verify your account and enable 2FA.",
+          description: "Welcome to iRise Academy! Your journey begins now.",
         });
       }
       
+      setEmail("");
+      setPassword("");
+      setFullName("");
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -72,18 +82,32 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isLogin ? "Sign In" : "Start Your Journey"}
+          <DialogTitle className="text-2xl">
+            {isLogin ? "Welcome Back" : "Start Your Journey"}
           </DialogTitle>
           <DialogDescription>
             {isLogin 
-              ? "Welcome back to iRise Academy" 
+              ? "Sign in to continue your learning journey" 
               : "Join the Agnotology & Epistemic Sovereignty Programme™"
             }
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleAuth} className="space-y-4 mt-4">
+          {!isLogin && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required={!isLogin}
+                placeholder="Your full name"
+              />
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -111,29 +135,42 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           
           <Button 
             type="submit" 
-            className="w-full bg-gradient-primary"
+            className="w-full bg-gradient-primary text-primary-foreground"
             disabled={loading}
           >
             {loading 
               ? "Please wait..." 
               : isLogin 
                 ? "Sign In" 
-                : "Start Journey & Enable 2FA"
+                : "Create Account"
             }
           </Button>
           
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+          
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             className="w-full"
             onClick={() => setIsLogin(!isLogin)}
           >
             {isLogin 
-              ? "New to iRise? Create account" 
+              ? "New here? Create an account" 
               : "Already have an account? Sign in"
             }
           </Button>
         </form>
+        
+        <p className="text-xs text-center text-muted-foreground mt-4">
+          Educational purposes only. By continuing, you agree to our Terms of Service.
+        </p>
       </DialogContent>
     </Dialog>
   );
