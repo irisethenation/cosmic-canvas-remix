@@ -6,6 +6,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import ProgramDetailsSection from "@/components/ProgramDetailsSection";
 import Footer from "@/components/Footer";
 import LavaLampBackground from "@/components/LavaLampBackground";
+import TelegramChatWidget from "@/components/TelegramChatWidget";
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
         <ProgramDetailsSection />
         <Footer />
       </div>
+      <TelegramChatWidget />
     </div>
   );
 };
