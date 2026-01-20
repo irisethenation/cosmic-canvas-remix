@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
+const TELEGRAM_WEBHOOK_SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // Initialize Supabase client
@@ -318,6 +319,31 @@ async function handleMessage(message: any) {
   await logMessage(supportCase.id, 'morpheus', aiResponse, undefined, 'text');
 }
 
+// Validate Telegram update structure
+function validateTelegramUpdate(update: any): boolean {
+  if (!update || typeof update !== 'object') return false;
+  
+  if (update.message) {
+    const msg = update.message;
+    if (!msg.chat?.id || !msg.from?.id) return false;
+    if (msg.text && typeof msg.text !== 'string') return false;
+    // Limit text length to prevent abuse
+    if (msg.text && msg.text.length > 4000) return false;
+  }
+  
+  if (update.callback_query) {
+    const cbq = update.callback_query;
+    if (!cbq.from?.id) return false;
+  }
+  
+  return true;
+}
+
+// Sanitize text input
+function sanitizeText(text: string): string {
+  return text.substring(0, 4000).trim();
+}
+
 // Main handler
 serve(async (req) => {
   // Handle CORS
@@ -325,12 +351,40 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   
+  // Verify Telegram secret token (critical security check)
+  if (TELEGRAM_WEBHOOK_SECRET) {
+    const secretToken = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
+    if (!secretToken || secretToken !== TELEGRAM_WEBHOOK_SECRET) {
+      console.error('Unauthorized webhook request - invalid or missing secret token');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  } else {
+    console.warn('TELEGRAM_WEBHOOK_SECRET not configured - webhook security is reduced');
+  }
+  
   try {
     const update = await req.json();
+    
+    // Validate update structure
+    if (!validateTelegramUpdate(update)) {
+      console.error('Invalid Telegram update structure');
+      return new Response(JSON.stringify({ error: 'Invalid request format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     console.log('Telegram update received:', JSON.stringify(update).substring(0, 500));
     
     // Handle message updates
     if (update.message) {
+      // Sanitize text before processing
+      if (update.message.text) {
+        update.message.text = sanitizeText(update.message.text);
+      }
       await handleMessage(update.message);
     }
     
@@ -345,7 +399,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error('Webhook error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    // Return generic error message to prevent information leakage
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
