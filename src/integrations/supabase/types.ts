@@ -44,6 +44,71 @@ export type Database = {
         }
         Relationships: []
       }
+      calls: {
+        Row: {
+          case_id: string | null
+          consent_confirmed: boolean
+          created_at: string
+          direction: string
+          duration_seconds: number | null
+          ended_at: string | null
+          id: string
+          phone_number: string | null
+          provider: string
+          recording_url: string | null
+          started_at: string
+          status: string
+          transcript: string | null
+          updated_at: string
+          user_id: string | null
+          vapi_call_id: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          consent_confirmed?: boolean
+          created_at?: string
+          direction?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          phone_number?: string | null
+          provider?: string
+          recording_url?: string | null
+          started_at?: string
+          status?: string
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vapi_call_id?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          consent_confirmed?: boolean
+          created_at?: string
+          direction?: string
+          duration_seconds?: number | null
+          ended_at?: string | null
+          id?: string
+          phone_number?: string | null
+          provider?: string
+          recording_url?: string | null
+          started_at?: string
+          status?: string
+          transcript?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_messages: {
         Row: {
           case_id: string | null
@@ -314,6 +379,113 @@ export type Database = {
         }
         Relationships: []
       }
+      paid_call_bookings: {
+        Row: {
+          calendly_event_uri: string | null
+          calendly_invitee_uri: string | null
+          call_session_id: string | null
+          created_at: string
+          id: string
+          meeting_link: string | null
+          notes: string | null
+          payment_status: string
+          product_id: string
+          scheduled_end: string | null
+          scheduled_start: string | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendly_event_uri?: string | null
+          calendly_invitee_uri?: string | null
+          call_session_id?: string | null
+          created_at?: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          payment_status?: string
+          product_id: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendly_event_uri?: string | null
+          calendly_invitee_uri?: string | null
+          call_session_id?: string | null
+          created_at?: string
+          id?: string
+          meeting_link?: string | null
+          notes?: string | null
+          payment_status?: string
+          product_id?: string
+          scheduled_end?: string | null
+          scheduled_start?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paid_call_bookings_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "paid_call_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paid_call_products: {
+        Row: {
+          active: boolean
+          calendly_event_type_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          entitlement: string
+          id: string
+          name: string
+          price_gbp: number
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          calendly_event_type_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          entitlement?: string
+          id?: string
+          name: string
+          price_gbp: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          calendly_event_type_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          entitlement?: string
+          id?: string
+          name?: string
+          price_gbp?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -358,39 +530,95 @@ export type Database = {
       }
       support_cases: {
         Row: {
+          case_type: string | null
+          channel: string | null
           created_at: string
           current_agent: string | null
           id: string
+          priority: string | null
           status: string | null
+          summary: string | null
           telegram_chat_id: number
           telegram_user_id: number
           telegram_username: string | null
           updated_at: string
+          user_id: string | null
           vapi_call_id: string | null
         }
         Insert: {
+          case_type?: string | null
+          channel?: string | null
           created_at?: string
           current_agent?: string | null
           id?: string
+          priority?: string | null
           status?: string | null
+          summary?: string | null
           telegram_chat_id: number
           telegram_user_id: number
           telegram_username?: string | null
           updated_at?: string
+          user_id?: string | null
           vapi_call_id?: string | null
         }
         Update: {
+          case_type?: string | null
+          channel?: string | null
           created_at?: string
           current_agent?: string | null
           id?: string
+          priority?: string | null
           status?: string | null
+          summary?: string | null
           telegram_chat_id?: number
           telegram_user_id?: number
           telegram_username?: string | null
           updated_at?: string
+          user_id?: string | null
           vapi_call_id?: string | null
         }
         Relationships: []
+      }
+      telemetry: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          event_key: string
+          id: string
+          level: string
+          payload: Json | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          event_key: string
+          id?: string
+          level?: string
+          payload?: Json | null
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          event_key?: string
+          id?: string
+          level?: string
+          payload?: Json | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemetry_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_agreements: {
         Row: {

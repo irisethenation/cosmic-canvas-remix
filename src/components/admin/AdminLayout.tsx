@@ -9,7 +9,9 @@ import {
   FileText,
   LogOut,
   Menu,
-  X
+  X,
+  MessageSquare,
+  Phone
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -24,6 +26,8 @@ const navItems = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
   { href: '/admin/notices', label: 'Notices', icon: FileText },
+  { href: '/admin/support', label: 'Support', icon: MessageSquare },
+  { href: '/admin/vapi', label: 'Voice Calls', icon: Phone },
 ];
 
 export const AdminLayout = ({ children }: AdminLayoutProps) => {
