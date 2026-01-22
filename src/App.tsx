@@ -12,6 +12,7 @@ import Programs from "./pages/Programs";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Support from "./pages/Support";
+import PaidCalls from "./pages/PaidCalls";
 import Community from "./pages/Community";
 import Newsletter from "./pages/Newsletter";
 import Testimonials from "./pages/Testimonials";
@@ -21,6 +22,8 @@ import AdminCourseDetail from "./pages/admin/AdminCourseDetail";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminNotices from "./pages/admin/AdminNotices";
+import AdminSupport from "./pages/admin/AdminSupport";
+import AdminVapi from "./pages/admin/AdminVapi";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
@@ -69,6 +72,17 @@ const AppRoutes = () => (
     <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
     <Route path="/admin/subscriptions" element={<AdminRoute><AdminSubscriptions /></AdminRoute>} />
     <Route path="/admin/notices" element={<AdminRoute><AdminNotices /></AdminRoute>} />
+    <Route path="/admin/support" element={<AdminRoute><AdminSupport /></AdminRoute>} />
+    <Route path="/admin/vapi" element={<AdminRoute><AdminVapi /></AdminRoute>} />
+    {/* Protected support routes */}
+    <Route 
+      path="/support/paid-calls" 
+      element={
+        <ProtectedRoute>
+          <PaidCalls />
+        </ProtectedRoute>
+      } 
+    />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );

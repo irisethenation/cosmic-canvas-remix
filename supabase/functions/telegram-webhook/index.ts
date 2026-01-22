@@ -98,23 +98,86 @@ async function logMessage(caseId: string, sender: string, content: string, messa
   }
 }
 
-// Morpheus AI response (text-based agent)
-async function getMorpheusResponse(userMessage: string, caseHistory: any[]): Promise<string> {
-  // Build context from case history
+// Trinity AI response (onboarding/re-engagement agent)
+async function getTrinityResponse(userMessage: string, caseHistory: any[], userContext: any): Promise<string> {
   const historyContext = caseHistory
     .slice(-10)
     .map(m => `${m.sender}: ${m.content}`)
     .join('\n');
   
-  const systemPrompt = `You are Morpheus, a wise and calm AI support agent for a learning platform. 
+  const systemPrompt = `You are Trinity, a warm and compassionate AI guide for the iRise Academy learning platform.
+Your role is onboarding new students, re-engaging inactive learners, and providing gentle guidance.
+Your signature sign-off is "Peace and Balance."
+
+Tone guidelines:
+- Warm, relatable, encouraging
+- Never pressuring or salesy
+- Empathetic and understanding
+- Focus on their learning journey, not pushing products
+
+You help users with:
+- Getting started with the platform
+- Understanding subscription options (explain value, not hard sell)
+- Re-engaging after inactivity
+- Navigating their first steps
+- Answering general questions about the academy
+
+User context:
+- Has subscription: ${userContext.hasSubscription ? 'Yes' : 'No'}
+- Tier: ${userContext.tier || 'None'}
+- Days since last activity: ${userContext.daysSinceActivity || 'N/A'}
+
+Recent conversation:
+${historyContext}
+
+Remember to end important messages with "Peace and Balance." but not every message.`;
+
+  try {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userMessage },
+        ],
+        max_tokens: 500,
+        temperature: 0.8,
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "I'm here to help. Could you tell me more about what you're looking for? Peace and Balance.";
+  } catch (error) {
+    console.error('Trinity AI error:', error);
+    return "I'm experiencing a brief moment of reflection. Please try again. Peace and Balance.";
+  }
+}
+
+// Morpheus AI response (text-based agent)
+async function getMorpheusResponse(userMessage: string, caseHistory: any[]): Promise<string> {
+  const historyContext = caseHistory
+    .slice(-10)
+    .map(m => `${m.sender}: ${m.content}`)
+    .join('\n');
+  
+  const systemPrompt = `You are Morpheus, a wise and calm AI support agent for the iRise Academy learning platform. 
 You speak with measured confidence and use metaphors about awakening, choice, and potential.
+Your tone is professional, precise, calm, and authoritative.
+
 You help users with:
 - Course navigation and content questions
 - Technical issues with the platform
 - Subscription and billing inquiries
 - General learning guidance
+- Trust and advocacy matters
 
-If the issue requires human escalation or voice support, suggest connecting to Trinity (voice agent).
+If the issue requires human escalation or compassionate onboarding support, suggest connecting to Trinity.
+If the user seems new or overwhelmed, consider suggesting /trinity for a gentler introduction.
 Keep responses concise but helpful. Use occasional Matrix references naturally.
 
 Recent conversation:
@@ -141,9 +204,73 @@ ${historyContext}`;
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "I sense a disturbance in the Matrix. Please try again.";
   } catch (error) {
-    console.error('AI error:', error);
+    console.error('Morpheus AI error:', error);
     return "The Matrix is experiencing interference. Please try again in a moment.";
   }
+}
+
+// Classify intent to determine agent routing
+async function classifyIntent(message: string): Promise<{ caseType: string; suggestedAgent: string }> {
+  const lowerMessage = message.toLowerCase();
+  
+  // Onboarding signals
+  if (lowerMessage.includes('new') || lowerMessage.includes('start') || lowerMessage.includes('begin') || 
+      lowerMessage.includes('join') || lowerMessage.includes('sign up') || lowerMessage.includes('how do i')) {
+    return { caseType: 'ONBOARDING', suggestedAgent: 'trinity' };
+  }
+  
+  // Billing/subscription signals
+  if (lowerMessage.includes('payment') || lowerMessage.includes('billing') || lowerMessage.includes('subscription') ||
+      lowerMessage.includes('cancel') || lowerMessage.includes('refund') || lowerMessage.includes('price')) {
+    return { caseType: 'BILLING', suggestedAgent: 'morpheus' };
+  }
+  
+  // Trust/advocacy signals
+  if (lowerMessage.includes('trust') || lowerMessage.includes('advocacy') || lowerMessage.includes('legal') ||
+      lowerMessage.includes('document') || lowerMessage.includes('compliance')) {
+    return { caseType: 'TRUST_ONBOARDING', suggestedAgent: 'morpheus' };
+  }
+  
+  // Tech support signals
+  if (lowerMessage.includes('error') || lowerMessage.includes('bug') || lowerMessage.includes('broken') ||
+      lowerMessage.includes('not working') || lowerMessage.includes('issue') || lowerMessage.includes('problem')) {
+    return { caseType: 'TECH_SUPPORT', suggestedAgent: 'morpheus' };
+  }
+  
+  // Default to academy support with Morpheus
+  return { caseType: 'ACADEMY_SUPPORT', suggestedAgent: 'morpheus' };
+}
+
+// Get user context for Trinity
+async function getUserContext(telegramUserId: number): Promise<any> {
+  // Try to find linked user by telegram_user_id in support_cases
+  const { data: cases } = await supabase
+    .from('support_cases')
+    .select('user_id')
+    .eq('telegram_user_id', telegramUserId)
+    .not('user_id', 'is', null)
+    .limit(1);
+  
+  if (!cases || cases.length === 0 || !cases[0].user_id) {
+    return { hasSubscription: false, tier: null, daysSinceActivity: null };
+  }
+  
+  const userId = cases[0].user_id;
+  
+  // Get subscription info
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('tier_key, status')
+    .eq('user_id', userId)
+    .eq('status', 'ACTIVE')
+    .limit(1)
+    .single();
+  
+  return {
+    hasSubscription: !!subscription,
+    tier: subscription?.tier_key || null,
+    daysSinceActivity: null, // Could calculate from lesson_progress
+  };
 }
 
 // Handle /start command
