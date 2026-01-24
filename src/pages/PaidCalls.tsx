@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LavaLampBackground from '@/components/LavaLampBackground';
+import CalendlyEmbed from '@/components/CalendlyEmbed';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +55,7 @@ const PaidCalls = () => {
   const [bookings, setBookings] = useState<PaidCallBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<PaidCallProduct | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -89,6 +91,12 @@ const PaidCalls = () => {
       return;
     }
 
+    // If Calendly is configured, show embedded widget
+    if (product.calendly_event_type_url) {
+      setSelectedProduct(product);
+      return;
+    }
+
     setPurchasing(product.id);
     try {
       // Create a pending booking
@@ -105,27 +113,11 @@ const PaidCalls = () => {
 
       if (bookingError) throw bookingError;
 
-      // If Calendly is configured, redirect to Calendly
-      if (product.calendly_event_type_url) {
-        // Build Calendly URL with prefilled info
-        const calendlyUrl = new URL(product.calendly_event_type_url);
-        calendlyUrl.searchParams.set('email', user.email || '');
-        calendlyUrl.searchParams.set('name', user.email?.split('@')[0] || '');
-        
-        // Open Calendly in new tab
-        window.open(calendlyUrl.toString(), '_blank');
-        
-        toast({
-          title: 'Booking Started',
-          description: 'Complete your booking in the Calendly window. Payment will be collected after scheduling.',
-        });
-      } else {
-        // TODO: Integrate with Stripe checkout
-        toast({
-          title: 'Coming Soon',
-          description: 'Stripe payment integration is being configured.',
-        });
-      }
+      // TODO: Integrate with Stripe checkout
+      toast({
+        title: 'Coming Soon',
+        description: 'Stripe payment integration is being configured.',
+      });
 
       fetchBookings();
     } catch (error: any) {
@@ -133,6 +125,31 @@ const PaidCalls = () => {
     } finally {
       setPurchasing(null);
     }
+  };
+
+  const handleCalendlyClose = async () => {
+    if (selectedProduct && user) {
+      // Create booking when Calendly is closed (user may have scheduled)
+      try {
+        await supabase
+          .from('paid_call_bookings')
+          .insert({
+            user_id: user.id,
+            product_id: selectedProduct.id,
+            payment_status: 'PENDING',
+            status: 'PENDING',
+          });
+        
+        fetchBookings();
+        toast({
+          title: 'Booking Initiated',
+          description: 'If you scheduled a call, you\'ll receive a confirmation email.',
+        });
+      } catch (error) {
+        console.error('Error creating booking:', error);
+      }
+    }
+    setSelectedProduct(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -160,6 +177,19 @@ const PaidCalls = () => {
               Get personalized guidance with our expert support sessions
             </p>
           </div>
+
+          {/* Calendly Embed Modal */}
+          {selectedProduct && selectedProduct.calendly_event_type_url && (
+            <div className="mb-8">
+              <CalendlyEmbed
+                url={selectedProduct.calendly_event_type_url}
+                prefillEmail={user?.email || ''}
+                prefillName={user?.email?.split('@')[0] || ''}
+                productName={selectedProduct.name}
+                onClose={handleCalendlyClose}
+              />
+            </div>
+          )}
 
           <Tabs defaultValue="products" className="max-w-5xl mx-auto">
             <TabsList className="grid w-full grid-cols-2 mb-8">
