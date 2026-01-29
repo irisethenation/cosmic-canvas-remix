@@ -15,7 +15,8 @@ export const useAdminStatus = () => {
         return;
       }
 
-      const { data, error } = await supabase.rpc('is_admin', { _user_id: user.id });
+      // Use secure function that only checks own admin status (no user_id parameter)
+      const { data, error } = await supabase.rpc('check_my_admin_status');
       
       if (error) {
         console.error('Error checking admin status:', error);
