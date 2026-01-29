@@ -6,8 +6,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { HelpCircle, Book, MessageCircle, Mail } from "lucide-react";
+import { SupportChatPanel } from "@/components/support/SupportChatPanel";
+import { useAuth } from "@/hooks/useAuth";
 
 const Support = () => {
+  const { user } = useAuth();
+  
   const faqs = [
     {
       question: "How do I access my courses?",
@@ -49,6 +53,13 @@ const Support = () => {
               Find answers to common questions or reach out to our support team.
             </p>
           </div>
+
+          {/* Support Chat Panel - only shown to authenticated users */}
+          {user && (
+            <div className="max-w-3xl mx-auto mb-12">
+              <SupportChatPanel />
+            </div>
+          )}
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
             <Card className="lava-glass text-center">
