@@ -20,6 +20,35 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Sanitize phone number - only allow valid phone chars
+function sanitizePhoneNumber(phone: string | undefined): string | null {
+  if (!phone) return null;
+  const cleaned = phone.replace(/[^0-9+\-\s()]/g, '');
+  return cleaned.length <= 20 && cleaned.length >= 7 ? cleaned : null;
+}
+
+// Validate and sanitize URL - only allow HTTPS URLs
+function sanitizeUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return null;
+    if (url.length > 500) return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+// Sanitize text content - removes HTML chars
+function sanitizeText(text: string | undefined): string | null {
+  if (!text) return null;
+  return text
+    .substring(0, 10000)
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .trim() || null;
+}
+
 // Log telemetry event
 async function logTelemetry(source: string, level: string, eventKey: string, payload: any, caseId?: string) {
   await supabase.from('telemetry').insert({
@@ -111,16 +140,19 @@ async function handleVapiEvent(event: any) {
   switch (eventType) {
     case 'call.started':
     case 'call-start': {
+      // Sanitize phone number before storing
+      const sanitizedPhone = sanitizePhoneNumber(event.call?.customer?.number);
+      
       await upsertCall(callId, {
         provider: 'VAPI',
         direction: event.call?.direction || 'INBOUND',
         status: 'IN_PROGRESS',
-        phone_number: event.call?.customer?.number,
+        phone_number: sanitizedPhone,
         started_at: new Date().toISOString(),
         consent_confirmed: false,
       });
       
-      await logTelemetry('VAPI', 'INFO', 'call_started', { callId, phone: event.call?.customer?.number });
+      await logTelemetry('VAPI', 'INFO', 'call_started', { callId, phone: sanitizedPhone });
       
       // Return greeting and menu
       return {
@@ -131,18 +163,22 @@ async function handleVapiEvent(event: any) {
     
     case 'call.ended':
     case 'call-end': {
+      // Sanitize transcript and recording URL before storing
+      const sanitizedTranscript = sanitizeText(event.transcript || event.call?.transcript);
+      const sanitizedRecordingUrl = sanitizeUrl(event.recordingUrl || event.call?.recordingUrl);
+      
       await upsertCall(callId, {
         status: 'COMPLETED',
         ended_at: new Date().toISOString(),
         duration_seconds: event.call?.duration || event.durationSeconds,
-        transcript: event.transcript || event.call?.transcript,
-        recording_url: event.recordingUrl || event.call?.recordingUrl,
+        transcript: sanitizedTranscript,
+        recording_url: sanitizedRecordingUrl,
       });
       
       await logTelemetry('VAPI', 'INFO', 'call_ended', { 
         callId, 
         duration: event.call?.duration,
-        hasTranscript: !!(event.transcript || event.call?.transcript),
+        hasTranscript: !!sanitizedTranscript,
       });
       
       return { type: 'ack' };

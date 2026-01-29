@@ -711,6 +711,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_my_admin_status: { Args: never; Returns: boolean }
+      check_my_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
+      check_my_subscription: { Args: never; Returns: boolean }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {

@@ -67,13 +67,13 @@ async function getOrCreateCase(chatId: number, userId: number, username?: string
     return existingCase;
   }
   
-  // Create new case
+  // Create new case - sanitize username before storing
   const { data: newCase, error } = await supabase
     .from('support_cases')
     .insert({
       telegram_chat_id: chatId,
       telegram_user_id: userId,
-      telegram_username: username,
+      telegram_username: sanitizeUsername(username),
       current_agent: 'morpheus',
       status: 'active',
     })
@@ -475,9 +475,21 @@ function validateTelegramUpdate(update: any): boolean {
   return true;
 }
 
-// Sanitize text input
+// Sanitize text input - removes HTML/JS chars to prevent XSS
 function sanitizeText(text: string): string {
-  return text.substring(0, 4000).trim();
+  return text
+    .substring(0, 4000)
+    .replace(/[<>]/g, '') // Remove angle brackets to prevent HTML injection
+    .trim();
+}
+
+// Sanitize username - removes dangerous chars for safe display
+function sanitizeUsername(username: string | undefined): string {
+  if (!username) return 'Anonymous';
+  return username
+    .substring(0, 100)
+    .replace(/[<>"'`]/g, '') // Remove HTML/JS chars
+    .trim() || 'Anonymous';
 }
 
 // Main handler
