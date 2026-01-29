@@ -60,14 +60,16 @@ export const useSupportChat = () => {
     }
   }, [user]);
 
-  // Fetch messages for the active case
+  // Fetch messages for the active case using the secure view
+  // This excludes sensitive metadata fields like telegram_message_id and internal metadata
   const fetchMessages = useCallback(async () => {
     if (!activeCase) return;
 
     try {
+      // Use the secure view that excludes sensitive metadata
       const { data, error } = await supabase
-        .from('case_messages')
-        .select('id, content, sender, created_at, attachments')
+        .from('case_messages_user_view')
+        .select('id, content, sender, created_at, attachments, message_type')
         .eq('case_id', activeCase.id)
         .order('created_at', { ascending: true });
 
