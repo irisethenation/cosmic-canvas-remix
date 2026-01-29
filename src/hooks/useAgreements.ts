@@ -67,14 +67,12 @@ export const useAgreements = () => {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      const { error } = await supabase
-        .from('user_agreements')
-        .insert({
-          user_id: user.id,
-          agreement_id: agreementId,
-          ip_address: null,
-          user_agent: navigator.userAgent
-        });
+      // Use privacy-compliant RPC function that hashes IP addresses
+      const { error } = await supabase.rpc('accept_agreement_with_privacy', {
+        _agreement_id: agreementId,
+        _ip_address: null, // We don't collect IP from client-side for privacy
+        _user_agent: navigator.userAgent
+      });
 
       if (error) throw error;
 
@@ -96,18 +94,16 @@ export const useAgreements = () => {
     if (!user || pendingAgreements.length === 0) return { error: null };
 
     try {
-      const inserts = pendingAgreements.map(agreement => ({
-        user_id: user.id,
-        agreement_id: agreement.id,
-        ip_address: null,
-        user_agent: navigator.userAgent
-      }));
+      // Accept each agreement using the privacy-compliant RPC function
+      for (const agreement of pendingAgreements) {
+        const { error } = await supabase.rpc('accept_agreement_with_privacy', {
+          _agreement_id: agreement.id,
+          _ip_address: null, // We don't collect IP from client-side for privacy
+          _user_agent: navigator.userAgent
+        });
 
-      const { error } = await supabase
-        .from('user_agreements')
-        .insert(inserts);
-
-      if (error) throw error;
+        if (error) throw error;
+      }
 
       // Update local state
       const newAccepted = pendingAgreements.map(a => ({

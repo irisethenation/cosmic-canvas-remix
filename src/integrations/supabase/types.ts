@@ -708,9 +708,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      case_messages_user_view: {
+        Row: {
+          attachments: Json | null
+          case_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          message_type: string | null
+          sender: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          case_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          message_type?: string | null
+          sender?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          case_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          message_type?: string | null
+          sender?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      accept_agreement_with_privacy: {
+        Args: {
+          _agreement_id: string
+          _ip_address: string
+          _user_agent: string
+        }
+        Returns: string
+      }
       check_my_admin_status: { Args: never; Returns: boolean }
       check_my_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
@@ -725,6 +770,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_ip_address: { Args: { ip: string }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
