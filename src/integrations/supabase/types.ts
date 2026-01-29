@@ -111,6 +111,7 @@ export type Database = {
       }
       case_messages: {
         Row: {
+          attachments: Json | null
           case_id: string | null
           content: string
           created_at: string
@@ -121,6 +122,7 @@ export type Database = {
           telegram_message_id: number | null
         }
         Insert: {
+          attachments?: Json | null
           case_id?: string | null
           content: string
           created_at?: string
@@ -131,6 +133,7 @@ export type Database = {
           telegram_message_id?: number | null
         }
         Update: {
+          attachments?: Json | null
           case_id?: string | null
           content?: string
           created_at?: string
