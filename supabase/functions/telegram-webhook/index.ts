@@ -6,8 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!;
+const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 const TELEGRAM_WEBHOOK_SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
+
+// Fail fast if required secrets are not configured
+if (!TELEGRAM_BOT_TOKEN) {
+  throw new Error('FATAL: TELEGRAM_BOT_TOKEN must be configured');
+}
+if (!TELEGRAM_WEBHOOK_SECRET) {
+  throw new Error('FATAL: TELEGRAM_WEBHOOK_SECRET must be configured');
+}
+
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // Initialize Supabase client
@@ -478,18 +487,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   
-  // Verify Telegram secret token (critical security check)
-  if (TELEGRAM_WEBHOOK_SECRET) {
-    const secretToken = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
-    if (!secretToken || secretToken !== TELEGRAM_WEBHOOK_SECRET) {
-      console.error('Unauthorized webhook request - invalid or missing secret token');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-  } else {
-    console.warn('TELEGRAM_WEBHOOK_SECRET not configured - webhook security is reduced');
+  // Verify Telegram secret token (required security check)
+  const secretToken = req.headers.get('X-Telegram-Bot-Api-Secret-Token');
+  if (!secretToken || secretToken !== TELEGRAM_WEBHOOK_SECRET) {
+    console.error('Unauthorized webhook request - invalid or missing secret token');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
   
   try {

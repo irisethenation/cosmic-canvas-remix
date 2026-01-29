@@ -7,8 +7,17 @@ const corsHeaders = {
 };
 
 const VAPI_WEBHOOK_SECRET = Deno.env.get('VAPI_WEBHOOK_SECRET');
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+// Fail fast if required secrets are not configured
+if (!VAPI_WEBHOOK_SECRET) {
+  throw new Error('FATAL: VAPI_WEBHOOK_SECRET must be configured');
+}
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('FATAL: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Log telemetry event
@@ -234,16 +243,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   
-  // Verify Vapi webhook secret if configured
-  if (VAPI_WEBHOOK_SECRET) {
-    const secretHeader = req.headers.get('x-vapi-secret');
-    if (!secretHeader || secretHeader !== VAPI_WEBHOOK_SECRET) {
-      console.error('Unauthorized Vapi webhook request');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+  // Verify Vapi webhook secret (required security check)
+  const secretHeader = req.headers.get('x-vapi-secret');
+  if (!secretHeader || secretHeader !== VAPI_WEBHOOK_SECRET) {
+    console.error('Unauthorized Vapi webhook request');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
   
   try {
