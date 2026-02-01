@@ -30,9 +30,14 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
     e.preventDefault();
     setLoading(true);
 
+    // Use production domain for password reset emails for consistent branding
+    const siteUrl = import.meta.env.PROD 
+      ? "https://course.irise.academy" 
+      : window.location.origin;
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       });
 
       if (error) throw error;
