@@ -17,6 +17,7 @@ import Community from "./pages/Community";
 import Newsletter from "./pages/Newsletter";
 import Testimonials from "./pages/Testimonials";
 import TestimonialDetail from "./pages/TestimonialDetail";
+import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCourseDetail from "./pages/admin/AdminCourseDetail";
@@ -34,6 +35,7 @@ const queryClient = new QueryClient();
 const AppRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/programs" element={<Programs />} />
     <Route path="/about" element={<About />} />
     <Route path="/contact" element={<Contact />} />
