@@ -14,6 +14,7 @@ interface AuthModalProps {
 
 const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps) => {
   const [isLogin, setIsLogin] = useState(defaultMode === "login");
+  const [isResetPassword, setIsResetPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -22,7 +23,36 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
 
   useEffect(() => {
     setIsLogin(defaultMode === "login");
+    setIsResetPassword(false);
   }, [defaultMode, open]);
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reset email sent",
+        description: "Check your email for a password reset link.",
+      });
+      setIsResetPassword(false);
+      setEmail("");
+    } catch (error) {
+      toast({
+        title: "Reset failed",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +108,52 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
     }
   };
 
+  if (isResetPassword) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Reset Password</DialogTitle>
+            <DialogDescription>
+              Enter your email address and we'll send you a link to reset your password.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleResetPassword} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="your@email.com"
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-primary text-primary-foreground"
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Send Reset Link"}
+            </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsResetPassword(false)}
+            >
+              Back to Sign In
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -121,7 +197,18 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              {isLogin && (
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => setIsResetPassword(true)}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <Input
               id="password"
               type="password"
