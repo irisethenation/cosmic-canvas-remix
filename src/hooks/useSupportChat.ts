@@ -42,8 +42,9 @@ export const useSupportChat = () => {
     }
 
     try {
+      // Use the secure view that excludes internal Telegram identifiers
       const { data, error } = await supabase
-        .from('support_cases')
+        .from('support_cases_user_view')
         .select('id, status, summary, created_at, updated_at')
         .eq('user_id', user.id)
         .eq('status', 'active')
