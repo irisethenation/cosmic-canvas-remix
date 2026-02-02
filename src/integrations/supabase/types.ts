@@ -107,6 +107,13 @@ export type Database = {
             referencedRelation: "support_cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "calls_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases_user_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       case_messages: {
@@ -149,6 +156,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "support_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases_user_view"
             referencedColumns: ["id"]
           },
         ]
@@ -621,6 +635,13 @@ export type Database = {
             referencedRelation: "support_cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "telemetry_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases_user_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_agreements: {
@@ -744,7 +765,53 @@ export type Database = {
             referencedRelation: "support_cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "support_cases_user_view"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      support_cases_user_view: {
+        Row: {
+          case_type: string | null
+          channel: string | null
+          created_at: string | null
+          current_agent: string | null
+          id: string | null
+          priority: string | null
+          status: string | null
+          summary: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          case_type?: string | null
+          channel?: string | null
+          created_at?: string | null
+          current_agent?: string | null
+          id?: string | null
+          priority?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          case_type?: string | null
+          channel?: string | null
+          created_at?: string | null
+          current_agent?: string | null
+          id?: string | null
+          priority?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
