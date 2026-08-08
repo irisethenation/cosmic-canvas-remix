@@ -21,6 +21,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import UpgradeCTA from '@/components/UpgradeCTA';
 
 interface Lesson {
   id: string;
@@ -82,6 +83,7 @@ const LessonPlayer = () => {
   const [nextLesson, setNextLesson] = useState<SiblingLesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [previewCompleted, setPreviewCompleted] = useState(false);
 
   useEffect(() => {
     const fetchLessonData = async () => {
@@ -209,6 +211,12 @@ const LessonPlayer = () => {
   }, [user, lesson, module, toast]);
 
   const markAsComplete = () => {
+    setPreviewCompleted(true);
+    updateProgress(100, true);
+  };
+
+  const handleContentEnded = () => {
+    setPreviewCompleted(true);
     updateProgress(100, true);
   };
 
@@ -313,7 +321,7 @@ const LessonPlayer = () => {
                       src={lesson.video_url || lesson.content_url || ''}
                       controls
                       className="w-full h-full"
-                      onEnded={() => updateProgress(100, true)}
+                      onEnded={handleContentEnded}
                       onTimeUpdate={(e) => {
                         const video = e.currentTarget;
                         const percent = Math.round((video.currentTime / video.duration) * 100);
@@ -330,7 +338,7 @@ const LessonPlayer = () => {
                         src={lesson.content_url || ''}
                         controls
                         className="w-full max-w-md"
-                        onEnded={() => updateProgress(100, true)}
+                        onEnded={handleContentEnded}
                       >
                         Your browser does not support audio playback.
                       </audio>
@@ -398,8 +406,30 @@ const LessonPlayer = () => {
                     </Button>
                   </div>
                 )}
+
+                {/* Finish preview (anonymous visitors) */}
+                {!user && lesson.is_free && !previewCompleted && (
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <Button
+                      onClick={() => setPreviewCompleted(true)}
+                      className="bg-gradient-primary hover:opacity-90"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      I've finished this preview
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Upgrade CTA after finishing a free preview */}
+            {lesson.is_free && (previewCompleted || progress?.completed) && (
+              <UpgradeCTA
+                courseTitle={course?.title}
+                courseSlug={course?.slug}
+                isAuthenticated={!!user}
+              />
+            )}
 
             {/* Navigation */}
             <div className="flex items-center justify-between">
