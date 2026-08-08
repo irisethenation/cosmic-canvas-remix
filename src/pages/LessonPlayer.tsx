@@ -406,8 +406,30 @@ const LessonPlayer = () => {
                     </Button>
                   </div>
                 )}
+
+                {/* Finish preview (anonymous visitors) */}
+                {!user && lesson.is_free && !previewCompleted && (
+                  <div className="mt-6 pt-6 border-t border-border">
+                    <Button
+                      onClick={() => setPreviewCompleted(true)}
+                      className="bg-gradient-primary hover:opacity-90"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      I've finished this preview
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Upgrade CTA after finishing a free preview */}
+            {lesson.is_free && (previewCompleted || progress?.completed) && (
+              <UpgradeCTA
+                courseTitle={course?.title}
+                courseSlug={course?.slug}
+                isAuthenticated={!!user}
+              />
+            )}
 
             {/* Navigation */}
             <div className="flex items-center justify-between">
