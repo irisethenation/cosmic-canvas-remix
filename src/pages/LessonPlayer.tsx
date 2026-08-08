@@ -224,14 +224,22 @@ const LessonPlayer = () => {
 
   if (!lesson) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold text-foreground mb-4">Lesson Not Found</h1>
-        <Link to="/dashboard">
-          <Button>Return to Dashboard</Button>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          {user ? 'Lesson Not Found' : 'This Lesson Is Locked'}
+        </h1>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {user
+            ? 'This lesson is unavailable or not included in your current plan.'
+            : 'Free preview lessons are open to everyone. Sign in to unlock the full programme.'}
+        </p>
+        <Link to={user ? '/dashboard' : '/'}>
+          <Button>{user ? 'Return to Dashboard' : 'Back to Programme'}</Button>
         </Link>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-background relative">

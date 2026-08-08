@@ -61,14 +61,7 @@ const AppRoutes = () => (
       } 
     />
     <Route path="/courses/:slug" element={<CourseDetail />} />
-    <Route 
-      path="/lessons/:lessonId" 
-      element={
-        <ProtectedRoute>
-          <LessonPlayer />
-        </ProtectedRoute>
-      } 
-    />
+    <Route path="/lessons/:lessonId" element={<LessonPlayer />} />
     {/* Admin Routes */}
     <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
     <Route path="/admin/courses" element={<AdminRoute><AdminCourses /></AdminRoute>} />

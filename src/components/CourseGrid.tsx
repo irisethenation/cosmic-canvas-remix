@@ -186,14 +186,8 @@ const CourseGrid = () => {
                   {previewModule.lessons.map((lesson, index) => (
                     <Link
                       key={lesson.id}
-                      to={user ? `/lessons/${lesson.id}` : '#'}
+                      to={`/lessons/${lesson.id}`}
                       className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors group"
-                      onClick={(e) => {
-                        if (!user) {
-                          e.preventDefault();
-                          // Could trigger auth modal here
-                        }
-                      }}
                     >
                       <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-sm font-medium text-green-700 dark:text-green-400">
                         {index + 1}
