@@ -15,3 +15,12 @@ npm install --no-audit --no-fund
 if ! command -v higgsfield >/dev/null 2>&1; then
   npm install -g @higgsfield/cli --no-audit --no-fund
 fi
+
+# Restore Higgsfield auth from the HIGGSFIELD_CREDENTIALS_JSON environment
+# secret (set in the Claude Code environment config) if no newer local
+# credentials exist — the CLI rewrites this file when it refreshes tokens.
+if [ -n "${HIGGSFIELD_CREDENTIALS_JSON:-}" ] && [ ! -f "$HOME/.config/higgsfield/credentials.json" ]; then
+  mkdir -p "$HOME/.config/higgsfield"
+  printf '%s' "$HIGGSFIELD_CREDENTIALS_JSON" > "$HOME/.config/higgsfield/credentials.json"
+  chmod 600 "$HOME/.config/higgsfield/credentials.json"
+fi
