@@ -27,6 +27,7 @@ import AdminNotices from "./pages/admin/AdminNotices";
 import AdminSupport from "./pages/admin/AdminSupport";
 import AdminVapi from "./pages/admin/AdminVapi";
 import NotFound from "./pages/NotFound";
+import LitigationAcademy from "./pages/LitigationAcademy";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 
@@ -79,6 +80,14 @@ const AppRoutes = () => (
           <PaidCalls />
         </ProtectedRoute>
       } 
+    />
+    <Route
+      path="/litigation-academy"
+      element={
+        <ProtectedRoute>
+          <LitigationAcademy />
+        </ProtectedRoute>
+      }
     />
     <Route path="*" element={<NotFound />} />
   </Routes>
