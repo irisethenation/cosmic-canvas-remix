@@ -427,6 +427,7 @@ const LessonPlayer = () => {
               <UpgradeCTA
                 courseTitle={course?.title}
                 courseSlug={course?.slug}
+                courseId={course?.id}
                 isAuthenticated={!!user}
               />
             )}

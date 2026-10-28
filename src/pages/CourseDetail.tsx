@@ -7,17 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  CheckCircle, 
-  Clock, 
-  Lock, 
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Lock,
   Play,
   ChevronRight,
+  ShoppingBag,
   User,
   LogOut
 } from 'lucide-react';
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import AuthModal from '@/components/AuthModal';
 
 interface Module {
   id: string;
@@ -71,13 +74,20 @@ const formatDuration = (seconds: number | null): string => {
   return `${mins} min`;
 };
 
+const COURSE_PRICE_ID = 'agnotology_programme_once';
+const COURSE_PRICE_LABEL = '£149';
+
 const CourseDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, signOut } = useAuth();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
   const [loading, setLoading] = useState(true);
+  const [purchased, setPurchased] = useState(false);
+  const [userTier, setUserTier] = useState(0);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -98,34 +108,55 @@ const CourseDetail = () => {
 
       setCourse(courseData);
 
-      // Fetch modules with lessons
-      const { data: modulesData } = await supabase
-        .from('modules')
-        .select(`
-          id,
-          title,
-          summary,
-          order_index,
-          lessons (
-            id,
-            title,
-            content_type,
-            duration_seconds,
-            is_free,
-            order_index
-          )
-        `)
-        .eq('course_id', courseData.id)
-        .eq('is_published', true)
-        .order('order_index', { ascending: true });
+      // Fetch modules and the full curriculum (locked lessons included so
+      // prospective buyers can see what they'd get)
+      const [{ data: modulesData }, { data: curriculum }] = await Promise.all([
+        supabase
+          .from('modules')
+          .select('id, title, summary, order_index')
+          .eq('course_id', courseData.id)
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('course_lesson_curriculum')
+          .select('id, module_id, title, content_type, duration_seconds, is_free, order_index')
+          .eq('course_id', courseData.id)
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+      ]);
 
       if (modulesData) {
-        // Sort lessons within each module
+        const lessonsByModule: Record<string, Lesson[]> = {};
+        (curriculum || []).forEach((l) => {
+          (lessonsByModule[l.module_id] ||= []).push(l);
+        });
         const sortedModules = modulesData.map(m => ({
           ...m,
-          lessons: (m.lessons || []).sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
+          lessons: (lessonsByModule[m.id] || []).sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
         }));
         setModules(sortedModules as Module[]);
+      }
+
+      // Fetch access info: one-time purchase and subscription tier
+      if (user) {
+        const [purchaseResult, profileResult] = await Promise.all([
+          supabase
+            .from('course_purchases')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('course_id', courseData.id)
+            .maybeSingle(),
+          supabase
+            .from('user_profiles')
+            .select('user_tier')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+        ]);
+        setPurchased(!!purchaseResult.data);
+        setUserTier(profileResult.data?.user_tier ?? 0);
+      } else {
+        setPurchased(false);
+        setUserTier(0);
       }
 
       // Fetch user progress
@@ -166,6 +197,24 @@ const CourseDetail = () => {
     return Math.round((completed / module.lessons.length) * 100);
   };
 
+  const hasAccess =
+    purchased ||
+    ((course?.tier_required ?? 0) > 0 && userTier >= (course?.tier_required ?? 0));
+
+  const handleBuy = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!course) return;
+    openCheckout({
+      priceId: COURSE_PRICE_ID,
+      customerEmail: user.email,
+      customData: { userId: user.id, courseId: course.id },
+      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -187,6 +236,7 @@ const CourseDetail = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultMode="signup" />
       <GeometricBackground />
       
       {/* Header */}
@@ -258,6 +308,34 @@ const CourseDetail = () => {
               
               <h1 className="text-3xl font-bold text-foreground mb-4">{course.title}</h1>
               <p className="text-muted-foreground mb-6">{course.description_md}</p>
+
+              {/* Purchase CTA */}
+              {!hasAccess && (
+                <Card className="border-primary/40 bg-primary/5 shadow-soft mb-6">
+                  <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Unlock the full course · {COURSE_PRICE_LABEL}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        One-time purchase, lifetime access. Free lessons stay open to everyone.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleBuy}
+                      disabled={checkoutLoading}
+                      className="bg-gradient-primary hover:opacity-90 shrink-0"
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      {user
+                        ? checkoutLoading
+                          ? 'Opening checkout...'
+                          : `Buy now · ${COURSE_PRICE_LABEL}`
+                        : 'Sign in to buy'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Progress Bar */}
               {user && (
@@ -332,7 +410,7 @@ const CourseDetail = () => {
                         {module.lessons.map((lesson, lessonIndex) => {
                           const lessonProgress = progress[lesson.id];
                           const isLessonComplete = lessonProgress?.completed;
-                          const isLocked = !lesson.is_free && !user;
+                          const isLocked = !lesson.is_free && !hasAccess;
 
                           return (
                             <Link

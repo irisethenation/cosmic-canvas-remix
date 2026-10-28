@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Lock, ArrowRight, CheckCircle } from 'lucide-react';
+import { Sparkles, Lock, ArrowRight, CheckCircle, ShoppingBag } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import AuthModal from '@/components/AuthModal';
 
 interface UpgradeCTAProps {
   courseTitle?: string;
   courseSlug?: string;
+  courseId?: string;
   isAuthenticated?: boolean;
 }
 
@@ -15,9 +20,33 @@ const benefits = [
   'Guided support from the mentorship team',
 ];
 
-const UpgradeCTA = ({ courseTitle, courseSlug, isAuthenticated }: UpgradeCTAProps) => {
+const COURSE_PRICE_ID = 'agnotology_programme_once';
+const COURSE_PRICE_LABEL = '£149 one-time';
+
+const UpgradeCTA = ({ courseTitle, courseSlug, courseId, isAuthenticated }: UpgradeCTAProps) => {
+  const { user } = useAuth();
+  const { openCheckout, loading } = usePaddleCheckout();
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const handleBuy = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    openCheckout({
+      priceId: COURSE_PRICE_ID,
+      customerEmail: user.email,
+      customData: {
+        userId: user.id,
+        ...(courseId ? { courseId } : {}),
+      },
+      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+    });
+  };
+
   return (
     <Card className="border-primary/40 bg-primary/5 shadow-soft">
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultMode="signup" />
       <CardContent className="p-6 sm:p-8">
         <div className="flex items-center gap-2 text-primary mb-3">
           <CheckCircle className="h-5 w-5" />
@@ -44,11 +73,13 @@ const UpgradeCTA = ({ courseTitle, courseSlug, isAuthenticated }: UpgradeCTAProp
         </ul>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button asChild className="bg-gradient-primary hover:opacity-90">
-            <Link to="/programs">
-              <Lock className="h-4 w-4 mr-2" />
-              Purchase the full course
-            </Link>
+          <Button onClick={handleBuy} disabled={loading} className="bg-gradient-primary hover:opacity-90">
+            <ShoppingBag className="h-4 w-4 mr-2" />
+            {isAuthenticated
+              ? loading
+                ? 'Opening checkout...'
+                : `Buy full course · ${COURSE_PRICE_LABEL}`
+              : 'Sign in & buy full course'}
           </Button>
           {courseSlug && (
             <Button asChild variant="outline" className="border-border">
@@ -60,8 +91,16 @@ const UpgradeCTA = ({ courseTitle, courseSlug, isAuthenticated }: UpgradeCTAProp
           )}
         </div>
 
+        <p className="text-xs text-muted-foreground mt-4">
+          Prefer a subscription?{' '}
+          <Link to="/programs" className="text-primary hover:underline">
+            Explore membership tiers
+          </Link>
+          . 14-day refund policy applies.
+        </p>
+
         {!isAuthenticated && (
-          <p className="text-xs text-muted-foreground mt-4">
+          <p className="text-xs text-muted-foreground mt-2">
             Already enrolled? Sign in to pick up where you left off.
           </p>
         )}

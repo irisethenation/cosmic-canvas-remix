@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793182736750,
+      "tag": "0000_paddle_products_checkout",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793182879751,
+      "tag": "0001_course_curriculum_view",
+      "breakpoints": true
+    }
+  ]
+}

@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, Sparkles, Star } from 'lucide-react';
+import { Crown, Sparkles, Star, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
 
 interface Subscription {
   id: string;
@@ -21,6 +22,49 @@ const tierConfig: Record<string, { name: string; icon: React.ElementType; color:
   TIER_1_KEY_MASTER: { name: 'Key Master', icon: Star, color: 'bg-primary text-primary-foreground' },
   TIER_2_LEARNED_MASTER_BUILDER: { name: 'Learned Master Builder', icon: Sparkles, color: 'bg-accent text-accent-foreground' },
   TIER_3_PRIVATE_MENTORSHIP: { name: 'Private Mentorship', icon: Crown, color: 'bg-brand-purple text-primary-foreground' },
+};
+
+export const tierPlans = [
+  { name: 'Key Master', priceLabel: '£29/mo', priceId: 'key_master_monthly', icon: Star },
+  { name: 'Learned Master Builder', priceLabel: '£79/mo', priceId: 'learned_master_builder_monthly', icon: Sparkles },
+  { name: 'Private Mentorship', priceLabel: '£249/mo', priceId: 'private_mentorship_monthly', icon: Crown },
+];
+
+const TierOptions = ({ email, userId }: { email?: string; userId?: string }) => {
+  const { openCheckout, loading } = usePaddleCheckout();
+
+  const subscribe = (priceId: string) => {
+    if (!userId) return;
+    openCheckout({
+      priceId,
+      customerEmail: email,
+      customData: { userId },
+      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+    });
+  };
+
+  return (
+    <div className="space-y-2 pt-2">
+      {tierPlans.map((plan) => (
+        <Button
+          key={plan.priceId}
+          variant="outline"
+          disabled={loading}
+          onClick={() => subscribe(plan.priceId)}
+          className="w-full justify-between border-border hover:bg-muted/50"
+        >
+          <span className="flex items-center gap-2">
+            <plan.icon className="h-4 w-4 text-primary" />
+            {plan.name}
+          </span>
+          <span className="flex items-center gap-1 text-sm text-muted-foreground">
+            <ShoppingBag className="h-3.5 w-3.5" />
+            {plan.priceLabel}
+          </span>
+        </Button>
+      ))}
+    </div>
+  );
 };
 
 export const SubscriptionCard = () => {
@@ -113,9 +157,7 @@ export const SubscriptionCard = () => {
               <span className="text-muted-foreground">Current Tier</span>
               <Badge variant="secondary">Free (Tier {profile?.user_tier || 0})</Badge>
             </div>
-            <Button className="w-full bg-gradient-primary hover:opacity-90">
-              Upgrade Now
-            </Button>
+            <TierOptions email={user?.email} userId={user?.id} />
           </div>
         )}
       </CardContent>
