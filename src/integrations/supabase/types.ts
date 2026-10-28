@@ -302,6 +302,13 @@ export type Database = {
             foreignKeyName: "lesson_progress_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
+            referencedRelation: "course_lesson_curriculum"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
             referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
@@ -829,6 +836,35 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "support_cases_user_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_lesson_curriculum: {
+        Row: {
+          content_type: string | null
+          course_id: string | null
+          duration_seconds: number | null
+          id: string | null
+          is_free: boolean | null
+          is_published: boolean | null
+          module_id: string | null
+          order_index: number | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modules_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
         ]
