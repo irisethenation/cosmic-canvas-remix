@@ -108,32 +108,31 @@ const CourseDetail = () => {
 
       setCourse(courseData);
 
-      // Fetch modules with lessons
-      const { data: modulesData } = await supabase
-        .from('modules')
-        .select(`
-          id,
-          title,
-          summary,
-          order_index,
-          lessons (
-            id,
-            title,
-            content_type,
-            duration_seconds,
-            is_free,
-            order_index
-          )
-        `)
-        .eq('course_id', courseData.id)
-        .eq('is_published', true)
-        .order('order_index', { ascending: true });
+      // Fetch modules and the full curriculum (locked lessons included so
+      // prospective buyers can see what they'd get)
+      const [{ data: modulesData }, { data: curriculum }] = await Promise.all([
+        supabase
+          .from('modules')
+          .select('id, title, summary, order_index')
+          .eq('course_id', courseData.id)
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+        supabase
+          .from('course_lesson_curriculum')
+          .select('id, module_id, title, content_type, duration_seconds, is_free, order_index')
+          .eq('course_id', courseData.id)
+          .eq('is_published', true)
+          .order('order_index', { ascending: true }),
+      ]);
 
       if (modulesData) {
-        // Sort lessons within each module
+        const lessonsByModule: Record<string, Lesson[]> = {};
+        (curriculum || []).forEach((l) => {
+          (lessonsByModule[l.module_id] ||= []).push(l);
+        });
         const sortedModules = modulesData.map(m => ({
           ...m,
-          lessons: (m.lessons || []).sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
+          lessons: (lessonsByModule[m.id] || []).sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
         }));
         setModules(sortedModules as Module[]);
       }
