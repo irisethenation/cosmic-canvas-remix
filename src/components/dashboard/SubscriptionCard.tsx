@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Crown, Sparkles, Star } from 'lucide-react';
+import { Crown, Sparkles, Star, ShoppingBag } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
 
 interface Subscription {
   id: string;
@@ -113,9 +114,7 @@ export const SubscriptionCard = () => {
               <span className="text-muted-foreground">Current Tier</span>
               <Badge variant="secondary">Free (Tier {profile?.user_tier || 0})</Badge>
             </div>
-            <Button className="w-full bg-gradient-primary hover:opacity-90">
-              Upgrade Now
-            </Button>
+            <TierOptions email={user?.email} userId={user?.id} />
           </div>
         )}
       </CardContent>
