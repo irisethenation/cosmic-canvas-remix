@@ -10,11 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Phone, 
-  Clock, 
-  Calendar, 
-  CheckCircle, 
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import {
+  Phone,
+  Clock,
+  Calendar,
+  CheckCircle,
   ExternalLink,
   Loader2
 } from 'lucide-react';
@@ -48,9 +49,18 @@ const entitlementLabels: Record<string, { label: string; color: string }> = {
   HUMAN_CALL: { label: 'Expert Consultation', color: 'bg-blue-500' },
 };
 
+// Map call products (by name in paid_call_products) to their checkout price IDs.
+const CALL_PRICE_BY_NAME: Record<string, string> = {
+  'Morpheus Express Call': 'morpheus_express_call_once',
+  'Morpheus Standard Call': 'morpheus_standard_call_once',
+  'Morpheus Deep Dive': 'morpheus_deep_dive_once',
+  'Human Expert Consultation': 'human_expert_consultation_once',
+};
+
 const PaidCalls = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
   const [products, setProducts] = useState<PaidCallProduct[]>([]);
   const [bookings, setBookings] = useState<PaidCallBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,10 +123,22 @@ const PaidCalls = () => {
 
       if (bookingError) throw bookingError;
 
-      // TODO: Integrate with Stripe checkout
-      toast({
-        title: 'Coming Soon',
-        description: 'Stripe payment integration is being configured.',
+      const priceId = CALL_PRICE_BY_NAME[product.name];
+      if (!priceId) {
+        toast({
+          title: 'Checkout unavailable',
+          description: 'This call does not have a checkout price configured yet.',
+          variant: 'destructive',
+        });
+        fetchBookings();
+        return;
+      }
+
+      await openCheckout({
+        priceId,
+        customerEmail: user.email,
+        customData: { userId: user.id, bookingId: booking.id },
+        successUrl: `${window.location.origin}/support/paid-calls?checkout=success`,
       });
 
       fetchBookings();
