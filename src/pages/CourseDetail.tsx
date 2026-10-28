@@ -7,17 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  CheckCircle, 
-  Clock, 
-  Lock, 
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Lock,
   Play,
   ChevronRight,
+  ShoppingBag,
   User,
   LogOut
 } from 'lucide-react';
+import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import AuthModal from '@/components/AuthModal';
 
 interface Module {
   id: string;
@@ -71,13 +74,20 @@ const formatDuration = (seconds: number | null): string => {
   return `${mins} min`;
 };
 
+const COURSE_PRICE_ID = 'agnotology_programme_once';
+const COURSE_PRICE_LABEL = '£149';
+
 const CourseDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, signOut } = useAuth();
+  const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
   const [loading, setLoading] = useState(true);
+  const [purchased, setPurchased] = useState(false);
+  const [userTier, setUserTier] = useState(0);
+  const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -126,6 +136,28 @@ const CourseDetail = () => {
           lessons: (m.lessons || []).sort((a: Lesson, b: Lesson) => a.order_index - b.order_index)
         }));
         setModules(sortedModules as Module[]);
+      }
+
+      // Fetch access info: one-time purchase and subscription tier
+      if (user) {
+        const [purchaseResult, profileResult] = await Promise.all([
+          supabase
+            .from('course_purchases')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('course_id', courseData.id)
+            .maybeSingle(),
+          supabase
+            .from('user_profiles')
+            .select('user_tier')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+        ]);
+        setPurchased(!!purchaseResult.data);
+        setUserTier(profileResult.data?.user_tier ?? 0);
+      } else {
+        setPurchased(false);
+        setUserTier(0);
       }
 
       // Fetch user progress
