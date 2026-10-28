@@ -167,6 +167,47 @@ export type Database = {
           },
         ]
       }
+      course_purchases: {
+        Row: {
+          course_id: string
+          created_at: string
+          environment: string
+          id: string
+          price_id: string
+          status: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          environment?: string
+          id?: string
+          price_id: string
+          status?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          price_id?: string
+          status?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_purchases_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           cover_url: string | null
@@ -505,10 +546,16 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
+          environment: string
           id: string
+          paddle_customer_id: string | null
+          paddle_subscription_id: string | null
+          price_id: string | null
+          product_id: string | null
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
@@ -518,10 +565,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          environment?: string
           id?: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
+          price_id?: string | null
+          product_id?: string | null
           provider?: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
@@ -531,10 +584,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
+          environment?: string
           id?: string
+          paddle_customer_id?: string | null
+          paddle_subscription_id?: string | null
+          price_id?: string | null
+          product_id?: string | null
           provider?: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null

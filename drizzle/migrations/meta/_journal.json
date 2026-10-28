@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793182736750,
+      "tag": "0000_paddle_products_checkout",
+      "breakpoints": true
+    }
+  ]
+}
