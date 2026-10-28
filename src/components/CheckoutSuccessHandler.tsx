@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { getPaddleEnvironment } from '@/lib/paddle';
 
 // Shows a confirmation toast after a successful checkout redirect and
-// refreshes the session-derived profile so new access appears immediately.
+// refreshes the session so new access appears immediately.
 const CheckoutSuccessHandler = () => {
   const location = useLocation();
   const { toast } = useToast();
@@ -34,4 +33,3 @@ const CheckoutSuccessHandler = () => {
 };
 
 export default CheckoutSuccessHandler;
-export { getPaddleEnvironment };

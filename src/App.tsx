@@ -29,6 +29,8 @@ import AdminVapi from "./pages/admin/AdminVapi";
 import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
+import PaymentTestModeBanner from "./components/PaymentTestModeBanner";
+import CheckoutSuccessHandler from "./components/CheckoutSuccessHandler";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +93,8 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <PaymentTestModeBanner />
+          <CheckoutSuccessHandler />
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
