@@ -198,6 +198,24 @@ const CourseDetail = () => {
     return Math.round((completed / module.lessons.length) * 100);
   };
 
+  const hasAccess =
+    purchased ||
+    ((course?.tier_required ?? 0) > 0 && userTier >= (course?.tier_required ?? 0));
+
+  const handleBuy = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return;
+    }
+    if (!course) return;
+    openCheckout({
+      priceId: COURSE_PRICE_ID,
+      customerEmail: user.email,
+      customData: { userId: user.id, courseId: course.id },
+      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -219,6 +237,7 @@ const CourseDetail = () => {
 
   return (
     <div className="min-h-screen bg-background relative">
+      <AuthModal open={authOpen} onOpenChange={setAuthOpen} defaultMode="signup" />
       <GeometricBackground />
       
       {/* Header */}
@@ -290,6 +309,34 @@ const CourseDetail = () => {
               
               <h1 className="text-3xl font-bold text-foreground mb-4">{course.title}</h1>
               <p className="text-muted-foreground mb-6">{course.description_md}</p>
+
+              {/* Purchase CTA */}
+              {!hasAccess && (
+                <Card className="border-primary/40 bg-primary/5 shadow-soft mb-6">
+                  <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-foreground">
+                        Unlock the full course · {COURSE_PRICE_LABEL}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        One-time purchase, lifetime access. Free lessons stay open to everyone.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleBuy}
+                      disabled={checkoutLoading}
+                      className="bg-gradient-primary hover:opacity-90 shrink-0"
+                    >
+                      <ShoppingBag className="h-4 w-4 mr-2" />
+                      {user
+                        ? checkoutLoading
+                          ? 'Opening checkout...'
+                          : `Buy now · ${COURSE_PRICE_LABEL}`
+                        : 'Sign in to buy'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Progress Bar */}
               {user && (
@@ -364,7 +411,7 @@ const CourseDetail = () => {
                         {module.lessons.map((lesson, lessonIndex) => {
                           const lessonProgress = progress[lesson.id];
                           const isLessonComplete = lessonProgress?.completed;
-                          const isLocked = !lesson.is_free && !user;
+                          const isLocked = !lesson.is_free && !hasAccess;
 
                           return (
                             <Link
