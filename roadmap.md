@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current audit and repairs
+- [ ] Audit catalog, authentication, purchases, account management, entitlements, and renewals against deployed settings.
+- [ ] Confirm unresolved business decisions and approve a repair plan.
+- [ ] Implement approved repairs with targeted business-rule tests.
+- [ ] Verify updated flows and provide a preview test checklist, including test cards.
+
 ## Done
 - [x] Payment provider enabled (Paddle) — test + live environments
 - [x] Products created: course £149 one-time, 3 subscription tiers, 4 paid-call products
