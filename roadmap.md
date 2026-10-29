@@ -1,8 +1,8 @@
 # Roadmap
 
 ## Current audit and repairs
-- [ ] Audit catalog, authentication, purchases, account management, entitlements, and renewals against deployed settings.
-- [ ] Confirm unresolved business decisions and approve a repair plan.
+- [x] Audit catalog, authentication, purchases, account management, entitlements, and renewals against deployed settings.
+- [ ] Approve repair plan; supply exact membership allocations, scheduling links, seller identity, and a user-owned preview session.
 - [ ] Implement approved repairs with targeted business-rule tests.
 - [ ] Verify updated flows and provide a preview test checklist, including test cards.
 
