@@ -24,6 +24,7 @@ const CheckoutSuccess = () => {
 
   const purchaseType = searchParams.get('type') || 'subscription';
   const courseId = searchParams.get('courseId');
+  const bookingId = searchParams.get('bookingId');
 
   useEffect(() => {
     if (authLoading) return;
@@ -47,11 +48,14 @@ const CheckoutSuccess = () => {
         return !!data;
       }
       if (purchaseType === 'call') {
-        const { data } = await supabase
+        // Confirm the exact booking from this checkout, not just any paid one.
+        let query = supabase
           .from('paid_call_bookings')
           .select('id')
           .eq('user_id', user.id)
-          .eq('payment_status', 'PAID')
+          .eq('payment_status', 'PAID');
+        if (bookingId) query = query.eq('id', bookingId);
+        const { data } = await query
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();

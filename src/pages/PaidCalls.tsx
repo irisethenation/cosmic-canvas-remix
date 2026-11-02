@@ -125,7 +125,7 @@ const PaidCalls = () => {
         priceId,
         customerEmail: user.email,
         customData: { userId: user.id, bookingId: booking.id },
-        successUrl: `${window.location.origin}/checkout/success?type=call`,
+        successUrl: `${window.location.origin}/checkout/success?type=call&bookingId=${booking.id}`,
       });
 
       fetchBookings();
