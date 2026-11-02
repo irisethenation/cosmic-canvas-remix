@@ -269,6 +269,10 @@ const LessonPlayer = () => {
 
   const ContentIcon = lesson ? contentTypeIcons[lesson.content_type] || BookOpen : BookOpen;
 
+  const hasCourseAccess =
+    purchased ||
+    ((course?.tier_required ?? 0) > 0 && subscriptionTier >= (course?.tier_required ?? 0));
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -365,15 +369,29 @@ const LessonPlayer = () => {
                 {lesson.video_url || lesson.content_url ? (
                   lesson.content_type === 'VIDEO' ? (
                     <video
+                      ref={videoRef}
                       src={lesson.video_url || lesson.content_url || ''}
                       controls
                       className="w-full h-full"
+                      onLoadedMetadata={() => {
+                        // Resume where the learner left off
+                        if (videoRef.current && progress?.last_position_seconds) {
+                          videoRef.current.currentTime = progress.last_position_seconds;
+                        }
+                      }}
                       onEnded={handleContentEnded}
+                      onPause={(e) => {
+                        updateProgress(progress?.percent_complete ?? 0, false, Math.round(e.currentTarget.currentTime));
+                      }}
                       onTimeUpdate={(e) => {
                         const video = e.currentTarget;
+                        if (!video.duration) return;
                         const percent = Math.round((video.currentTime / video.duration) * 100);
-                        if (percent % 10 === 0) {
-                          updateProgress(percent, false);
+                        const now = Date.now();
+                        // Throttle: at most one write per 10s, on 10% boundaries
+                        if (percent % 10 === 0 && now - lastSaveRef.current > 10000) {
+                          lastSaveRef.current = now;
+                          updateProgress(percent, false, Math.round(video.currentTime));
                         }
                       }}
                     >
@@ -469,8 +487,9 @@ const LessonPlayer = () => {
               </CardContent>
             </Card>
 
-            {/* Upgrade CTA after finishing a free preview */}
-            {lesson.is_free && (previewCompleted || progress?.completed) && (
+            {/* Upgrade CTA after finishing a free preview — hidden from users
+                who already own the course or have a qualifying membership */}
+            {lesson.is_free && !hasCourseAccess && (previewCompleted || progress?.completed) && (
               <UpgradeCTA
                 courseTitle={course?.title}
                 courseSlug={course?.slug}
