@@ -14,24 +14,39 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // null = still checking, false = no valid recovery session
+  const [recoveryReady, setRecoveryReady] = useState<boolean | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if we have a valid session from the reset link
+    // The form is only usable with a valid recovery session — either already
+    // present, or established by the PASSWORD_RECOVERY event from the link.
+    let subscription: { unsubscribe: () => void } | null = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        // Listen for the PASSWORD_RECOVERY event
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-          if (event === "PASSWORD_RECOVERY") {
-            // User clicked the reset link and is now in recovery mode
-          }
-        });
-        return () => subscription.unsubscribe();
+      if (session) {
+        setRecoveryReady(true);
+        return;
       }
+      const { data } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setRecoveryReady(true);
+          if (timeout) clearTimeout(timeout);
+        }
+      });
+      subscription = data.subscription;
+      // If no recovery event arrives shortly, the link is invalid or expired.
+      timeout = setTimeout(() => setRecoveryReady((ready) => ready ?? false), 4000);
     };
     checkSession();
+
+    return () => {
+      subscription?.unsubscribe();
+      if (timeout) clearTimeout(timeout);
+    };
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
