@@ -15,6 +15,13 @@
       "when": 1793182879751,
       "tag": "0001_course_curriculum_view",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793585295569,
+      "tag": "0002_payment_system_hardening",
+      "breakpoints": true
     }
   ]
 }

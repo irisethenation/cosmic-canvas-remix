@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agreements: {
         Row: {
           content_markdown: string
@@ -551,6 +575,78 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_events: {
+        Row: {
+          created_at: string
+          environment: string
+          error: string | null
+          event_id: string
+          event_type: string
+          id: string
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          error?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string | null
+          environment: string
+          id: string
+          paddle_transaction_id: string
+          price_id: string | null
+          product_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          environment: string
+          id?: string
+          paddle_transaction_id: string
+          price_id?: string | null
+          product_id?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string | null
+          environment?: string
+          id?: string
+          paddle_transaction_id?: string
+          price_id?: string | null
+          product_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -924,6 +1020,11 @@ export type Database = {
         Returns: boolean
       }
       check_my_subscription: { Args: never; Returns: boolean }
+      current_app_env: { Args: never; Returns: string }
+      effective_tier: {
+        Args: { _env: string; _user_id: string }
+        Returns: number
+      }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -934,6 +1035,10 @@ export type Database = {
       }
       hash_ip_address: { Args: { ip: string }; Returns: string }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      subscription_tier_for: {
+        Args: { _env: string; _user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role:
