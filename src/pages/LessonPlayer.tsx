@@ -87,10 +87,26 @@ const LessonPlayer = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [previewCompleted, setPreviewCompleted] = useState(false);
+  const [purchased, setPurchased] = useState(false);
+  const { tier: subscriptionTier } = useSubscription();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const lastSaveRef = useRef(0);
 
   useEffect(() => {
     const fetchLessonData = async () => {
       if (!lessonId) return;
+
+      // Reset all per-lesson state so stale progress, navigation, or
+      // completion from the previous lesson never leaks into this one.
+      setLesson(null);
+      setModule(null);
+      setCourse(null);
+      setProgress(null);
+      setPrevLesson(null);
+      setNextLesson(null);
+      setPreviewCompleted(false);
+      setPurchased(false);
+      setLoading(true);
 
       // Fetch lesson
       const { data: lessonData, error: lessonError } = await supabase
@@ -119,28 +135,49 @@ const LessonPlayer = () => {
         // Fetch course
         const { data: courseData } = await supabase
           .from('courses')
-          .select('id, title, slug')
+          .select('id, title, slug, tier_required')
           .eq('id', moduleData.course_id)
           .maybeSingle();
 
         setCourse(courseData);
 
-        // Fetch all lessons in this module to find prev/next
-        const { data: allLessons } = await supabase
-          .from('lessons')
-          .select('id, title, order_index')
-          .eq('module_id', lessonData.module_id)
-          .eq('is_published', true)
-          .order('order_index', { ascending: true });
+        // Prev/next across the whole course, including module boundaries
+        const [{ data: courseModules }, { data: curriculum }] = await Promise.all([
+          supabase
+            .from('modules')
+            .select('id, order_index')
+            .eq('course_id', moduleData.course_id)
+            .eq('is_published', true)
+            .order('order_index', { ascending: true }),
+          supabase
+            .from('course_lesson_curriculum')
+            .select('id, module_id, title, order_index')
+            .eq('course_id', moduleData.course_id)
+            .order('order_index', { ascending: true }),
+        ]);
 
-        if (allLessons) {
-          const currentIndex = allLessons.findIndex(l => l.id === lessonId);
-          if (currentIndex > 0) {
-            setPrevLesson(allLessons[currentIndex - 1]);
-          }
-          if (currentIndex < allLessons.length - 1) {
-            setNextLesson(allLessons[currentIndex + 1]);
-          }
+        if (courseModules && curriculum) {
+          const moduleOrder = new Map(courseModules.map((m, i) => [m.id, i]));
+          const ordered = [...curriculum].sort((a, b) => {
+            const mo = (moduleOrder.get(a.module_id) ?? 0) - (moduleOrder.get(b.module_id) ?? 0);
+            return mo !== 0 ? mo : a.order_index - b.order_index;
+          });
+          const currentIndex = ordered.findIndex(l => l.id === lessonId);
+          setPrevLesson(currentIndex > 0 ? ordered[currentIndex - 1] : null);
+          setNextLesson(currentIndex >= 0 && currentIndex < ordered.length - 1 ? ordered[currentIndex + 1] : null);
+        }
+
+        // Verified purchase in this environment (for upgrade-prompt logic)
+        if (user && courseData) {
+          const { data: purchase } = await supabase
+            .from('course_purchases')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('course_id', courseData.id)
+            .eq('environment', getPaddleEnvironment())
+            .eq('status', 'paid')
+            .maybeSingle();
+          setPurchased(!!purchase);
         }
       }
 
@@ -155,15 +192,20 @@ const LessonPlayer = () => {
 
         setProgress(progressData);
 
-        // Create progress record if doesn't exist
-        if (!progressData && moduleData) {
-          await supabase.from('lesson_progress').insert({
-            user_id: user.id,
-            lesson_id: lessonId,
-            course_id: moduleData.course_id,
-            status: 'IN_PROGRESS',
-            percent_complete: 0,
-          });
+        // Create progress record if doesn't exist, and reflect it locally
+        if (!progressData) {
+          const { data: created } = await supabase
+            .from('lesson_progress')
+            .insert({
+              user_id: user.id,
+              lesson_id: lessonId,
+              course_id: moduleData.course_id,
+              status: 'IN_PROGRESS',
+              percent_complete: 0,
+            })
+            .select('id, percent_complete, completed, last_position_seconds')
+            .maybeSingle();
+          if (created) setProgress(created);
         }
       }
 
@@ -173,7 +215,7 @@ const LessonPlayer = () => {
     fetchLessonData();
   }, [lessonId, user]);
 
-  const updateProgress = useCallback(async (percentComplete: number, completed: boolean = false) => {
+  const updateProgress = useCallback(async (percentComplete: number, completed: boolean = false, positionSeconds?: number) => {
     if (!user || !lesson || !module) return;
 
     setSaving(true);
@@ -188,6 +230,7 @@ const LessonPlayer = () => {
           completed,
           status: completed ? 'COMPLETED' : 'IN_PROGRESS',
           completed_at: completed ? new Date().toISOString() : null,
+          ...(positionSeconds !== undefined ? { last_position_seconds: positionSeconds } : {}),
         }, {
           onConflict: 'user_id,lesson_id'
         });
@@ -198,6 +241,7 @@ const LessonPlayer = () => {
         ...prev,
         percent_complete: percentComplete,
         completed,
+        last_position_seconds: positionSeconds ?? prev.last_position_seconds,
       } : null);
 
       if (completed) {
