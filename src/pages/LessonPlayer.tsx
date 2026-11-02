@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +21,8 @@ import {
   LogOut
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
+import { getPaddleEnvironment } from '@/lib/paddle';
 import UpgradeCTA from '@/components/UpgradeCTA';
 
 interface Lesson {
@@ -48,6 +50,7 @@ interface Course {
   id: string;
   title: string;
   slug: string;
+  tier_required: number;
 }
 
 interface LessonProgress {
