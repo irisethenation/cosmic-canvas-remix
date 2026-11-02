@@ -18,6 +18,11 @@ import Newsletter from "./pages/Newsletter";
 import Testimonials from "./pages/Testimonials";
 import TestimonialDetail from "./pages/TestimonialDetail";
 import ResetPassword from "./pages/ResetPassword";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import AccountSettings from "./pages/AccountSettings";
+import Terms from "./pages/Terms";
+import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyNotice from "./pages/PrivacyNotice";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminCourseDetail from "./pages/admin/AdminCourseDetail";
@@ -30,7 +35,6 @@ import NotFound from "./pages/NotFound";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AdminRoute } from "./components/AdminRoute";
 import PaymentTestModeBanner from "./components/PaymentTestModeBanner";
-import CheckoutSuccessHandler from "./components/CheckoutSuccessHandler";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +68,18 @@ const AppRoutes = () => (
     />
     <Route path="/courses/:slug" element={<CourseDetail />} />
     <Route path="/lessons/:lessonId" element={<LessonPlayer />} />
+    <Route path="/checkout/success" element={<CheckoutSuccess />} />
+    <Route path="/terms" element={<Terms />} />
+    <Route path="/refund-policy" element={<RefundPolicy />} />
+    <Route path="/privacy" element={<PrivacyNotice />} />
+    <Route
+      path="/account/settings"
+      element={
+        <ProtectedRoute>
+          <AccountSettings />
+        </ProtectedRoute>
+      }
+    />
     {/* Admin Routes */}
     <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
     <Route path="/admin/courses" element={<AdminRoute><AdminCourses /></AdminRoute>} />
@@ -94,7 +110,6 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <PaymentTestModeBanner />
-          <CheckoutSuccessHandler />
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
