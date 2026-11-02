@@ -91,7 +91,7 @@ const CheckoutSuccess = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, purchaseType, courseId]);
+  }, [user, authLoading, purchaseType, courseId, bookingId]);
 
   return (
     <div className="min-h-screen bg-background relative flex items-center justify-center p-4">
