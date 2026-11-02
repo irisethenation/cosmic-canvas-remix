@@ -134,6 +134,7 @@ export const BillingCard = () => {
     const { data } = await supabase
       .from('payment_transactions')
       .select('id, amount, currency, status, created_at')
+      .eq('user_id', user.id)
       .eq('environment', getPaddleEnvironment())
       .order('created_at', { ascending: false })
       .limit(10);

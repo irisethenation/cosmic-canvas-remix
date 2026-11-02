@@ -20,6 +20,9 @@ import {
   LogOut
 } from 'lucide-react';
 import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import { useSubscription } from '@/hooks/useSubscription';
+import { getPaddleEnvironment } from '@/lib/paddle';
+import { COURSE_PRICE_ID, COURSE_PRICE_LABEL } from '@/lib/catalog';
 import AuthModal from '@/components/AuthModal';
 
 interface Module {
@@ -74,13 +77,11 @@ const formatDuration = (seconds: number | null): string => {
   return `${mins} min`;
 };
 
-const COURSE_PRICE_ID = 'agnotology_programme_once';
-const COURSE_PRICE_LABEL = '£149';
-
 const CourseDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user, signOut } = useAuth();
   const { openCheckout, loading: checkoutLoading } = usePaddleCheckout();
+  const { tier: subscriptionTier } = useSubscription();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<Record<string, LessonProgress>>({});
@@ -137,7 +138,8 @@ const CourseDetail = () => {
         setModules(sortedModules as Module[]);
       }
 
-      // Fetch access info: one-time purchase and subscription tier
+      // Fetch access info: verified one-time purchase in this environment,
+      // plus any admin-granted manual tier (subscriptions come from useSubscription).
       if (user) {
         const [purchaseResult, profileResult] = await Promise.all([
           supabase
@@ -145,6 +147,8 @@ const CourseDetail = () => {
             .select('id')
             .eq('user_id', user.id)
             .eq('course_id', courseData.id)
+            .eq('environment', getPaddleEnvironment())
+            .eq('status', 'paid')
             .maybeSingle(),
           supabase
             .from('user_profiles')
@@ -197,9 +201,10 @@ const CourseDetail = () => {
     return Math.round((completed / module.lessons.length) * 100);
   };
 
+  const effectiveTier = Math.max(subscriptionTier, userTier);
   const hasAccess =
     purchased ||
-    ((course?.tier_required ?? 0) > 0 && userTier >= (course?.tier_required ?? 0));
+    ((course?.tier_required ?? 0) > 0 && effectiveTier >= (course?.tier_required ?? 0));
 
   const handleBuy = () => {
     if (!user) {
@@ -211,7 +216,7 @@ const CourseDetail = () => {
       priceId: COURSE_PRICE_ID,
       customerEmail: user.email,
       customData: { userId: user.id, courseId: course.id },
-      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+      successUrl: `${window.location.origin}/checkout/success?type=course&courseId=${course.id}`,
     });
   };
 

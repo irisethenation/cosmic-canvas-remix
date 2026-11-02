@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLogin(defaultMode === "login");
@@ -71,11 +73,19 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
         });
         
         if (error) throw error;
-        
+
         toast({
           title: "Welcome back!",
           description: "You have successfully signed in.",
         });
+
+        // Return the user to whatever they were trying to reach (e.g. a
+        // purchase or protected page) before being asked to sign in.
+        const next = sessionStorage.getItem("auth_next");
+        if (next) {
+          sessionStorage.removeItem("auth_next");
+          setTimeout(() => navigate(next), 100);
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -91,10 +101,10 @@ const AuthModal = ({ open, onOpenChange, defaultMode = "login" }: AuthModalProps
         });
         
         if (error) throw error;
-        
+
         toast({
           title: "Registration successful!",
-          description: "Welcome to iRise Academy! Your journey begins now.",
+          description: "Check your email to confirm your account, then sign in to continue.",
         });
       }
       

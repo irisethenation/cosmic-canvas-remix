@@ -20,6 +20,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
+    // Remember the intended destination so sign-in can return to it.
+    sessionStorage.setItem('auth_next', location.pathname + location.search);
     return <Navigate to="/" replace />;
   }
 
