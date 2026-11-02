@@ -121,6 +121,40 @@ const ResetPassword = () => {
     );
   }
 
+  if (recoveryReady === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (recoveryReady === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <Lock className="h-6 w-6 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl">Link Expired or Invalid</CardTitle>
+            <CardDescription>
+              This password reset link is no longer valid. Please request a new one.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              className="w-full bg-gradient-primary text-primary-foreground"
+              onClick={() => navigate("/")}
+            >
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
