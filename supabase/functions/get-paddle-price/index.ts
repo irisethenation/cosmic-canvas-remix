@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { gatewayFetch, type PaddleEnv } from '../_shared/paddle.ts';
+import { isKnownPriceId } from '../_shared/catalog.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -24,7 +25,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const response = await gatewayFetch(environment, `/prices?external_id=${encodeURIComponent(priceId)}`);
+    // Only catalog prices can be resolved — arbitrary IDs are rejected.
+    if (!isKnownPriceId(priceId)) {
+      return new Response(JSON.stringify({ error: 'Unknown price' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const response = await gatewayFetch(environment, `/prices?external_id=${encodeURIComponent(priceId)}&status=active`);
     const data = await response.json();
     if (!data?.data?.length) {
       return new Response(JSON.stringify({ error: 'Price not found' }), {
