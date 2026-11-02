@@ -286,6 +286,24 @@ const PaidCalls = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
+                            {booking.payment_status === 'PAID' &&
+                              booking.status === 'PENDING' &&
+                              booking.paid_call_products?.calendly_event_type_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedProduct(booking.paid_call_products!)}
+                                className="border-amber-500/50 text-amber-400"
+                              >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Schedule
+                              </Button>
+                            )}
+                            {booking.payment_status === 'PAID' &&
+                              booking.status === 'PENDING' &&
+                              !booking.paid_call_products?.calendly_event_type_url && (
+                              <p className="text-sm text-muted-foreground">We'll email you to schedule</p>
+                            )}
                             {booking.meeting_link && booking.status === 'SCHEDULED' && (
                               <Button
                                 variant="outline"
