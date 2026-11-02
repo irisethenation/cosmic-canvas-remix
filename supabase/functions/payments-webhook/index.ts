@@ -8,21 +8,31 @@ const TIER_PRICE_TO_TIER: Record<string, number> = {
   private_mentorship_monthly: 3,
 };
 
+const TIER_TO_TIER_KEY: Record<number, string> = {
+  1: 'TIER_1_KEY_MASTER',
+  2: 'TIER_2_LEARNED_MASTER_BUILDER',
+  3: 'TIER_3_PRIVATE_MENTORSHIP',
+};
+
 const COURSE_PRICE_IDS = new Set(['agnotology_programme_once']);
 
-const CALL_PRICE_IDS = new Set([
-  'morpheus_express_call_once',
-  'morpheus_standard_call_once',
-  'morpheus_deep_dive_once',
-  'human_expert_consultation_once',
-]);
+// Call price ID -> paid_call_products.name, used to validate that the booking
+// being marked paid actually matches the product that was purchased.
+const CALL_PRICE_TO_PRODUCT_NAME: Record<string, string> = {
+  morpheus_express_call_once: 'Morpheus Express Call',
+  morpheus_standard_call_once: 'Morpheus Standard Call',
+  morpheus_deep_dive_once: 'Morpheus Deep Dive',
+  human_expert_consultation_once: 'Human Expert Consultation',
+};
 
 // Paddle lowercase statuses -> existing uppercase enum values.
+// Paused grants no access (INCOMPLETE); effective_tier only honors
+// ACTIVE/TRIALING, PAST_DUE in period, and CANCELED still in period.
 const STATUS_MAP: Record<string, string> = {
   active: 'ACTIVE',
   trialing: 'TRIALING',
   past_due: 'PAST_DUE',
-  paused: 'CANCELED',
+  paused: 'INCOMPLETE',
   canceled: 'CANCELED',
 };
 
@@ -42,58 +52,6 @@ function tierForPrice(priceId: string | null | undefined): number {
   return TIER_PRICE_TO_TIER[priceId] ?? 0;
 }
 
-// Recompute the caller's tier from all of their subscriptions in this
-// environment. Active (and past-due, which is dunning — access stays) and
-// canceled-but-still-in-period subscriptions grant their tier; everything
-// else is ignored.
-async function recomputeTier(userId: string, env: PaddleEnv) {
-  const supabase = getSupabase();
-  const { data: subs, error } = await supabase
-    .from('subscriptions')
-    .select('tier_key, status, current_period_end')
-    .eq('user_id', userId)
-    .eq('environment', env);
-
-  if (error || !subs) {
-    console.error('recomputeTier query failed', error);
-    return;
-  }
-
-  const now = Date.now();
-  const TIER_KEY_TO_TIER: Record<string, number> = {
-    TIER_1_KEY_MASTER: 1,
-    TIER_2_LEARNED_MASTER_BUILDER: 2,
-    TIER_3_PRIVATE_MENTORSHIP: 3,
-  };
-
-  let maxTier = 0;
-  for (const sub of subs) {
-    const tier = TIER_KEY_TO_TIER[sub.tier_key] ?? 0;
-    const status = sub.status;
-    const periodEnd = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
-    const grantsAccess =
-      status === 'ACTIVE' ||
-      status === 'TRIALING' ||
-      (status === 'PAST_DUE' && (periodEnd === null || periodEnd > now)) ||
-      (status === 'CANCELED' && periodEnd !== null && periodEnd > now);
-    if (grantsAccess && tier > maxTier) maxTier = tier;
-  }
-
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('user_tier')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (profile && profile.user_tier !== maxTier) {
-    const { error: updateError } = await supabase
-      .from('user_profiles')
-      .update({ user_tier: maxTier })
-      .eq('user_id', userId);
-    if (updateError) console.error('Failed to update user_tier', updateError);
-  }
-}
-
 async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   const { id, customerId, items, status, currentBillingPeriod, customData } = data;
 
@@ -103,37 +61,29 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
     return;
   }
 
-  const item = items[0];
-  const priceId = item.price.importMeta?.externalId;
-  const productId = item.product?.importMeta?.externalId;
+  const item = items?.[0];
+  const priceId = item?.price?.importMeta?.externalId;
+  const productId = item?.product?.importMeta?.externalId;
   if (!priceId || !productId) {
-    // Product/price was not created via create_product / create_price, so we
-    // have no human-readable ID to map tiers off.
     console.warn('Skipping subscription: missing importMeta.externalId', {
-      rawPriceId: item.price.id,
-      rawProductId: item.product?.id,
+      rawPriceId: item?.price?.id,
+      rawProductId: item?.product?.id,
     });
     return;
   }
 
   const tier = tierForPrice(priceId);
   if (tier === 0) {
-    console.warn('Subscription for unknown price, skipping tier mapping', { priceId });
+    // Never fall back to a default tier: an unknown price means the catalog
+    // mapping is wrong, and granting access would be worse than skipping.
+    console.warn('Subscription for unknown price, skipping', { priceId });
+    return;
   }
 
-  const mappedStatus = STATUS_MAP[status] ?? 'INCOMPLETE';
-
-  await getSupabase().from('subscriptions').upsert(
+  const { error } = await getSupabase().from('subscriptions').upsert(
     {
       user_id: userId,
-      tier_key:
-        tier === 1
-          ? 'TIER_1_KEY_MASTER'
-          : tier === 2
-            ? 'TIER_2_LEARNED_MASTER_BUILDER'
-            : tier === 3
-              ? 'TIER_3_PRIVATE_MENTORSHIP'
-              : 'TIER_1_KEY_MASTER',
+      tier_key: TIER_TO_TIER_KEY[tier],
       provider: 'paddle',
       provider_customer_id: customerId,
       provider_subscription_id: id,
@@ -141,23 +91,22 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
       paddle_customer_id: customerId,
       product_id: productId,
       price_id: priceId,
-      status: mappedStatus,
+      status: STATUS_MAP[status] ?? 'INCOMPLETE',
       current_period_start: currentBillingPeriod?.startsAt ?? null,
       current_period_end: currentBillingPeriod?.endsAt ?? null,
       environment: env,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id' }
+    { onConflict: 'paddle_subscription_id' }
   );
-
-  await recomputeTier(userId, env);
+  if (error) throw new Error(`subscription upsert failed: ${error.message}`);
 }
 
 async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   const { id, status, currentBillingPeriod, scheduledChange, items } = data;
 
   const update: Record<string, unknown> = {
-    status: STATUS_MAP[status] ?? status,
+    status: STATUS_MAP[status] ?? 'INCOMPLETE',
     current_period_start: currentBillingPeriod?.startsAt ?? null,
     current_period_end: currentBillingPeriod?.endsAt ?? null,
     cancel_at_period_end: scheduledChange?.action === 'cancel',
@@ -168,60 +117,59 @@ async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
   const tier = tierForPrice(priceId);
   if (tier > 0) {
     update.price_id = priceId;
-    update.tier_key =
-      tier === 1
-        ? 'TIER_1_KEY_MASTER'
-        : tier === 2
-          ? 'TIER_2_LEARNED_MASTER_BUILDER'
-          : 'TIER_3_PRIVATE_MENTORSHIP';
+    update.tier_key = TIER_TO_TIER_KEY[tier];
   }
 
-  const { data: sub } = await getSupabase()
+  const { error, count } = await getSupabase()
     .from('subscriptions')
-    .select('user_id')
-    .eq('paddle_subscription_id', id)
-    .eq('environment', env)
-    .maybeSingle();
-
-  if (!sub) {
-    console.warn('subscription.updated for unknown subscription', { id, env });
-    return;
-  }
-
-  await getSupabase()
-    .from('subscriptions')
-    .update(update)
+    .update(update, { count: 'exact' })
     .eq('paddle_subscription_id', id)
     .eq('environment', env);
 
-  // Prorated plan changes land here; recompute tier for the new price.
-  await recomputeTier(sub.user_id, env);
+  if (error) throw new Error(`subscription update failed: ${error.message}`);
+  if (count === 0) {
+    console.warn('subscription.updated for unknown subscription', { id, env });
+  }
 }
 
 async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
   const { id } = data;
 
-  const { data: sub } = await getSupabase()
+  // Canceled rows keep their current_period_end, so "access until the paid
+  // period ends" stays enforced by the effective_tier entitlement function.
+  const { error, count } = await getSupabase()
     .from('subscriptions')
-    .select('user_id, current_period_end')
-    .eq('paddle_subscription_id', id)
-    .eq('environment', env)
-    .maybeSingle();
-
-  if (!sub) {
-    console.warn('subscription.canceled for unknown subscription', { id, env });
-    return;
-  }
-
-  // Canceled rows keep their current_period_end, so the grace period
-  // ("access until the paid period ends") stays enforced by recomputeTier.
-  await getSupabase()
-    .from('subscriptions')
-    .update({ status: 'CANCELED', cancel_at_period_end: true, updated_at: new Date().toISOString() })
+    .update({ status: 'CANCELED', cancel_at_period_end: true, updated_at: new Date().toISOString() }, { count: 'exact' })
     .eq('paddle_subscription_id', id)
     .eq('environment', env);
 
-  await recomputeTier(sub.user_id, env);
+  if (error) throw new Error(`subscription cancel failed: ${error.message}`);
+  if (count === 0) {
+    console.warn('subscription.canceled for unknown subscription', { id, env });
+  }
+}
+
+// Idempotently record the transaction in payment history.
+async function recordTransaction(data: any, env: PaddleEnv, status: string) {
+  const { id, items, customData, details } = data;
+  const userId = customData?.userId;
+  if (!userId) return;
+
+  const item = items?.[0];
+  const { error } = await getSupabase().from('payment_transactions').upsert(
+    {
+      user_id: userId,
+      paddle_transaction_id: id,
+      environment: env,
+      price_id: item?.price?.importMeta?.externalId ?? null,
+      product_id: item?.price?.productId ?? null,
+      amount: details?.totals?.total ? Number(details.totals.total) / 100 : null,
+      currency: data.currencyCode ?? null,
+      status,
+    },
+    { onConflict: 'paddle_transaction_id,environment' }
+  );
+  if (error) console.error('Failed to record payment transaction', error);
 }
 
 async function handleTransactionCompleted(data: any, env: PaddleEnv) {
@@ -239,6 +187,8 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
     return;
   }
 
+  await recordTransaction(data, env, 'completed');
+
   const supabase = getSupabase();
 
   if (COURSE_PRICE_IDS.has(priceId)) {
@@ -248,35 +198,60 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
       return;
     }
 
-    // One purchase row per user + course; idempotent on retry.
-    const { data: existing } = await supabase
-      .from('course_purchases')
+    // Attribution check: the course must actually exist.
+    const { data: course } = await supabase
+      .from('courses')
       .select('id')
-      .eq('user_id', userId)
-      .eq('course_id', courseId)
+      .eq('id', courseId)
       .maybeSingle();
-
-    if (existing) {
-      console.log('Course already purchased, ignoring duplicate', { userId, courseId });
+    if (!course) {
+      console.warn('Course purchase for unknown course, rejecting', { id, courseId });
       return;
     }
 
-    const { error } = await supabase.from('course_purchases').insert({
-      user_id: userId,
-      course_id: courseId,
-      transaction_id: id,
-      price_id: priceId,
-      environment: env,
-      status: 'paid',
-    });
-    if (error) console.error('Failed to insert course_purchases', error);
+    // Idempotent on retry: one row per user + course + environment.
+    const { error } = await supabase.from('course_purchases').upsert(
+      {
+        user_id: userId,
+        course_id: courseId,
+        transaction_id: id,
+        price_id: priceId,
+        environment: env,
+        status: 'paid',
+      },
+      { onConflict: 'user_id,course_id,environment', ignoreDuplicates: true }
+    );
+    if (error) throw new Error(`course_purchases insert failed: ${error.message}`);
     return;
   }
 
-  if (CALL_PRICE_IDS.has(priceId)) {
+  const expectedProductName = CALL_PRICE_TO_PRODUCT_NAME[priceId];
+  if (expectedProductName) {
     const bookingId = customData?.bookingId;
     if (!bookingId) {
       console.warn('Call purchase without bookingId in customData', { id });
+      return;
+    }
+
+    // Attribution check: booking must belong to this user and match the
+    // product that was actually paid for.
+    const { data: booking } = await supabase
+      .from('paid_call_bookings')
+      .select('id, user_id, payment_status, paid_call_products(name)')
+      .eq('id', bookingId)
+      .maybeSingle();
+
+    if (!booking || booking.user_id !== userId) {
+      console.warn('Call purchase booking mismatch, rejecting', { id, bookingId, userId });
+      return;
+    }
+    const productName = (booking as any).paid_call_products?.name;
+    if (productName !== expectedProductName) {
+      console.warn('Call purchase product mismatch, rejecting', { id, bookingId, productName, expectedProductName });
+      return;
+    }
+    if (booking.payment_status === 'PAID') {
+      console.log('Booking already paid, ignoring duplicate', { bookingId });
       return;
     }
 
@@ -288,7 +263,7 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', bookingId);
-    if (error) console.error('Failed to mark call booking paid', error);
+    if (error) throw new Error(`booking update failed: ${error.message}`);
     return;
   }
 
@@ -297,23 +272,74 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
 
 async function handleWebhook(req: Request, env: PaddleEnv) {
   const event = await verifyWebhook(req, env);
+  const supabase = getSupabase();
 
-  switch (event.eventType) {
-    case EventName.SubscriptionCreated:
-      await handleSubscriptionCreated(event.data, env);
-      break;
-    case EventName.SubscriptionUpdated:
-      await handleSubscriptionUpdated(event.data, env);
-      break;
-    case EventName.SubscriptionCanceled:
-      await handleSubscriptionCanceled(event.data, env);
-      break;
-    case EventName.TransactionCompleted:
-      await handleTransactionCompleted(event.data, env);
-      break;
-    default:
-      // Unhandled events (e.g. transaction.payment_failed) — log and return 200.
-      console.log('Unhandled event:', event.eventType);
+  // Event ledger: insert first so retries and replays are deduplicated.
+  const eventId = (event as any).eventId ?? (event as any).id;
+  if (eventId) {
+    const { error: ledgerError } = await supabase.from('payment_events').insert({
+      event_id: eventId,
+      environment: env,
+      event_type: event.eventType,
+      status: 'processing',
+    });
+    if (ledgerError?.code === '23505') {
+      // Unique violation: already seen. If it failed before, reprocess.
+      const { data: existing } = await supabase
+        .from('payment_events')
+        .select('status')
+        .eq('event_id', eventId)
+        .eq('environment', env)
+        .maybeSingle();
+      if (existing?.status === 'processed') {
+        console.log('Duplicate event, already processed', { eventId });
+        return;
+      }
+    } else if (ledgerError) {
+      throw new Error(`event ledger insert failed: ${ledgerError.message}`);
+    }
+  }
+
+  try {
+    switch (event.eventType) {
+      case EventName.SubscriptionCreated:
+        await handleSubscriptionCreated(event.data, env);
+        break;
+      case EventName.SubscriptionUpdated:
+        await handleSubscriptionUpdated(event.data, env);
+        break;
+      case EventName.SubscriptionCanceled:
+        await handleSubscriptionCanceled(event.data, env);
+        break;
+      case EventName.TransactionCompleted:
+        await handleTransactionCompleted(event.data, env);
+        break;
+      case EventName.TransactionPaymentFailed:
+        await recordTransaction(event.data, env, 'failed');
+        break;
+      case EventName.TransactionCanceled:
+        await recordTransaction(event.data, env, 'canceled');
+        break;
+      default:
+        console.log('Unhandled event:', event.eventType);
+    }
+
+    if (eventId) {
+      await supabase
+        .from('payment_events')
+        .update({ status: 'processed', processed_at: new Date().toISOString() })
+        .eq('event_id', eventId)
+        .eq('environment', env);
+    }
+  } catch (e) {
+    if (eventId) {
+      await supabase
+        .from('payment_events')
+        .update({ status: 'failed', error: e instanceof Error ? e.message : String(e) })
+        .eq('event_id', eventId)
+        .eq('environment', env);
+    }
+    throw e;
   }
 }
 
@@ -331,6 +357,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error('Webhook error:', e);
-    return new Response('Webhook error', { status: 400 });
+    // 500 so the provider retries instead of the event being lost.
+    return new Response('Webhook error', { status: 500 });
   }
 });

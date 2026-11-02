@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Lock, ArrowRight, CheckCircle, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePaddleCheckout } from '@/hooks/usePaddleCheckout';
+import { COURSE_PRICE_ID, COURSE_PRICE_LABEL } from '@/lib/catalog';
 import AuthModal from '@/components/AuthModal';
 
 interface UpgradeCTAProps {
@@ -19,9 +20,6 @@ const benefits = [
   'Downloadable materials and templates',
   'Guided support from the mentorship team',
 ];
-
-const COURSE_PRICE_ID = 'agnotology_programme_once';
-const COURSE_PRICE_LABEL = '£149 one-time';
 
 const UpgradeCTA = ({ courseTitle, courseSlug, courseId, isAuthenticated }: UpgradeCTAProps) => {
   const { user } = useAuth();
@@ -40,7 +38,7 @@ const UpgradeCTA = ({ courseTitle, courseSlug, courseId, isAuthenticated }: Upgr
         userId: user.id,
         ...(courseId ? { courseId } : {}),
       },
-      successUrl: `${window.location.origin}/dashboard?checkout=success`,
+      successUrl: `${window.location.origin}/checkout/success?type=course${courseId ? `&courseId=${courseId}` : ''}`,
     });
   };
 
@@ -78,7 +76,7 @@ const UpgradeCTA = ({ courseTitle, courseSlug, courseId, isAuthenticated }: Upgr
             {isAuthenticated
               ? loading
                 ? 'Opening checkout...'
-                : `Buy full course · ${COURSE_PRICE_LABEL}`
+                : `Buy full course · ${COURSE_PRICE_LABEL} one-time`
               : 'Sign in & buy full course'}
           </Button>
           {courseSlug && (
