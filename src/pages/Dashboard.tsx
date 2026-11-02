@@ -1,10 +1,10 @@
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import LavaLampBackground from '@/components/LavaLampBackground';
-import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
+import { BillingCard } from '@/components/dashboard/BillingCard';
 import { ProgressSummary } from '@/components/dashboard/ProgressSummary';
 import { DashboardCourseGrid } from '@/components/dashboard/DashboardCourseGrid';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -31,6 +31,11 @@ const Dashboard = () => {
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">{user?.email}</span>
             </div>
+            <Link to="/account/settings">
+              <Button variant="outline" size="sm" className="border-border">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
             <Button 
               variant="outline" 
               size="sm"
@@ -57,7 +62,7 @@ const Dashboard = () => {
 
         <div className="grid gap-6 lg:grid-cols-3 mb-8">
           <div className="lg:col-span-1">
-            <SubscriptionCard />
+            <BillingCard />
           </div>
           <div className="lg:col-span-2">
             <ProgressSummary />
