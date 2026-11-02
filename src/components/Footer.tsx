@@ -38,6 +38,15 @@ const Footer = () => {
               <li><Link to="/newsletter" className="hover:text-white transition-colors">Newsletter</Link></li>
             </ul>
           </div>
+
+          <div>
+            <h4 className="font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2 text-gray-300">
+              <li><Link to="/terms" className="hover:text-white transition-colors">Terms &amp; Conditions</Link></li>
+              <li><Link to="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Notice</Link></li>
+            </ul>
+          </div>
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center">
@@ -46,7 +55,13 @@ const Footer = () => {
             <span className="font-semibold">Exsurgite Omnes Qui Vocati Sentiunt</span>
           </p>
           <p className="text-gray-400">
-            © 2024 iRise Academy. All rights reserved. | Agnotology & Epistemic Sovereignty Programme™
+            © 2026 iRise Academy. All rights reserved. | Agnotology & Epistemic Sovereignty Programme™
+          </p>
+          <p className="text-gray-500 text-sm mt-2">
+            E-commerce operations, order fulfillment, and payment processing are managed by Global Executive Marketing Limited on behalf of iRise.academy.
+          </p>
+          <p className="text-gray-500 text-sm mt-1">
+            Educational purposes only. No legal advice. No representation. Use at your own discretion.
           </p>
         </div>
       </div>
